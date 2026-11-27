@@ -667,3 +667,5 @@ li.ex-locked .mc-opt{cursor:default}
 .p-todo-i svg{width:16px;height:16px;flex:none;color:var(--tc)}
 .p-todo-i.t-write{--tc:#7a3d9c}.p-todo-i.t-speak{--tc:var(--mark)}.p-todo-i.t-read,.p-todo-i.t-listen{--tc:var(--lv-A2)}.p-todo-i.t-check{--tc:var(--good)}
 .p-todo-i:hover{border-color:var(--tc)}
+/* room to scroll a box above the keyboard, even at the end of a page */
+@media (pointer:coarse){body.kb-open .main{padding-bottom:60vh}}
