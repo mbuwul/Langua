@@ -233,5 +233,5 @@
     render();
   }
 
-  window.NLCards = { summary: summary, mount: mount, unitCards: function (u) { return DECK.filter(function (c) { return c.u === u }) } };
+  window.NLCards = { summary: summary, mount: mount, prefs: function (p) { if (p) { for (var k in p) if (k === 'newLimit' || k === 'auto') S[k] = p[k]; save() } return { newLimit: S.newLimit, auto: S.auto } }, unitCards: function (u) { return DECK.filter(function (c) { return c.u === u }) } };
 })();
