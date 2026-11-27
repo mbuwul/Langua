@@ -30,6 +30,26 @@
     if(FONTS[d]&&!document.querySelector('link[data-f="'+d+'"]')){var l=document.createElement('link');l.rel='stylesheet';l.setAttribute('data-f',d);l.href='https://fonts.googleapis.com/css2?'+FONTS[d]+'&display=swap';document.head.appendChild(l)}}
   function design(){return root.getAttribute('data-design')||'delft'}
 
+  /* ---------- Keep the box you type in visible above the phone keyboard ---------- */
+  (function(){
+    var vv=window.visualViewport,el=null,off=null,coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
+    function typing(n){return n&&(n.tagName==='TEXTAREA'||(n.tagName==='INPUT'&&/^(text|search|email|number|)$/.test(n.type||'')))}
+    function place(){
+      if(!el||document.activeElement!==el)return;
+      var cover=0,b=document.querySelector('.bar');if(b)cover=b.getBoundingClientRect().bottom;
+      document.querySelectorAll('.ptabs').forEach(function(p){var cs=getComputedStyle(p);if(cs.position==='sticky'||cs.position==='fixed'){var r=p.getBoundingClientRect();if(r.top<=cover+2)cover=Math.max(cover,r.bottom)}});
+      var bottom=vv?vv.offsetTop+vv.height:innerHeight;
+      /* Android app draws under the keyboard instead of shrinking the page, so assume the keyboard covers the lower part */
+      if(coarse&&(!vv||vv.height>innerHeight*.8))bottom=Math.min(bottom,innerHeight*.52);
+      var room=bottom-cover-16,box=el.closest('li.ex,.task-write,.uc-q,.fc-card')||el,r=box.getBoundingClientRect(),ir=el.getBoundingClientRect();
+      if(box!==el&&r.height>room)r=ir;
+      if(ir.top>=cover+8&&ir.bottom<=bottom-8&&r.top>=cover)return;
+      window.scrollBy({top:r.top-cover-12,behavior:'smooth'})}
+    document.addEventListener('focusin',function(e){if(!typing(e.target))return;el=e.target;clearTimeout(off);body.classList.add('kb-open');setTimeout(place,60);setTimeout(place,420)});
+    document.addEventListener('focusout',function(){off=setTimeout(function(){if(!typing(document.activeElement)){el=null;body.classList.remove('kb-open')}},250)});
+    if(vv)vv.addEventListener('resize',function(){if(el)setTimeout(place,30)});
+  })();
+
   /* ---------- Unit page: headings and parts ---------- */
   var content=document.querySelector('.content'),parts=[];
   if(content){
