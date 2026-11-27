@@ -181,6 +181,16 @@ public class LanguaSpeechPlugin extends Plugin {
         }
     }
 
+    /** The speech service itself failed: start a fresh one, whenever it happened (at most twice). */
+    private void retryAfterReset(String code) {
+        if (!stopping && retries < 2) {
+            retries++;
+            main.postDelayed(this::listenSegment, 400);
+        } else {
+            reject(heardSpeech && code.startsWith("error-") ? "no-match" : code);
+        }
+    }
+
     private void finish() {
         if (call == null) return;
         if (segments.isEmpty()) {
@@ -295,7 +305,7 @@ public class LanguaSpeechPlugin extends Plugin {
                 case SpeechRecognizer.ERROR_CLIENT:
                 case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
                     resetRecognizer();
-                    if (stopping) finish(); else retryOrFail("aborted");
+                    if (!segments.isEmpty() || stopping) finish(); else retryAfterReset("aborted");
                     break;
                 case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
                     reject("not-allowed");
@@ -308,9 +318,18 @@ public class LanguaSpeechPlugin extends Plugin {
                 case SpeechRecognizer.ERROR_AUDIO:
                     reject("audio-capture");
                     break;
+                case 12: // ERROR_LANGUAGE_NOT_SUPPORTED (Android 12+)
+                case 13: // ERROR_LANGUAGE_UNAVAILABLE: Dutch not available on this phone right now
+                    if (!segments.isEmpty()) finish(); else reject("language-not-supported");
+                    break;
+                case 10: // ERROR_TOO_MANY_REQUESTS
+                case 11: // ERROR_SERVER_DISCONNECTED: the speech service dropped; start it fresh
+                    resetRecognizer();
+                    if (!segments.isEmpty()) finish(); else if (stopping) reject("network"); else retryAfterReset("network");
+                    break;
                 default:
                     resetRecognizer();
-                    if (!segments.isEmpty()) finish(); else retryOrFail("aborted");
+                    if (!segments.isEmpty()) finish(); else retryAfterReset("error-" + error); // shows the code, to help diagnose
             }
         }
     }

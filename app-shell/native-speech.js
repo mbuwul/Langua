@@ -44,7 +44,7 @@
         var alts = m.map(function (t, i) { return { transcript: t, confidence: i === 0 ? 0.9 : 0.5 }; }); alts.isFinal = true;
         me._fire('result', { type: 'result', resultIndex: 0, results: [alts] });
       }).catch(function (e) {
-        var c = e && e.code; me._fire('error', { type: 'error', error: /^(no-speech|no-match|network|not-allowed|service-not-allowed|audio-capture|aborted)$/.test(c) ? c : errCode(e) });
+        var c = e && e.code; me._fire('error', { type: 'error', error: /^(no-speech|no-match|network|not-allowed|service-not-allowed|audio-capture|aborted|language-not-supported|error-\d+)$/.test(c) ? c : errCode(e) });
       }).then(function () { me._end(); });
       return;
     }
