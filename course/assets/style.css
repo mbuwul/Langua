@@ -366,3 +366,94 @@ li.ex-ok .tl-line{border-color:var(--good);border-style:solid}
 .ex-me .me-btn{display:inline-flex;align-items:center;gap:6px}
 .ex-me .me-tip{font-size:.85rem;color:var(--muted,inherit);opacity:.8}
 .content .mic-note{margin:12px 0}
+
+/* ---------- Sidebar: flashcards badge, locked units ---------- */
+.sn-badge-n{margin-left:auto;min-width:22px;height:22px;padding:0 7px;border-radius:99px;background:var(--mark);color:#fff;font-size:.72rem;font-weight:800;display:inline-grid;place-items:center}
+.sn-unit.locked .sn-tt{color:var(--muted)}
+.btn-sec.is-locked{color:var(--muted);gap:6px}.btn-sec.is-locked svg{width:15px;height:15px}
+
+/* ---------- Unit check ---------- */
+.unit-check{flex-direction:column;align-items:stretch;gap:14px}
+.unit-check .uc-head{display:flex;flex-direction:column;gap:2px}
+.unit-check .eyebrow{margin:0}
+.unit-check .uc-start{align-self:flex-start}
+.unit-check.passed{border-color:var(--good);background:linear-gradient(0deg,var(--good-soft),var(--surface) 70%)}
+.unit-check.passed h3{color:var(--good)}
+.uc-list{list-style:none;counter-reset:uc;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+.uc-q{counter-increment:uc;position:relative;padding:14px 16px 12px 52px;border-radius:12px;border:1px solid var(--line);background:var(--paper)}
+.uc-q::before{content:counter(uc);position:absolute;left:14px;top:14px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:.8rem}
+.uc-q.ex-ok{border-color:var(--good);background:var(--good-soft)}.uc-q.ex-ok::before{background:var(--good);color:var(--good-ink)}
+.uc-q.ex-no{border-color:var(--mark);background:var(--mark-soft)}.uc-q.ex-no::before{background:var(--mark);color:#fff}
+.uc-p{margin:0 0 8px}
+.uc-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.uc-opt{text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);cursor:pointer;font-weight:600;line-height:1.35}
+.uc-opt:hover{border-color:var(--accent)}
+.uc-opt.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.graded .uc-opt.right{border-color:var(--good);background:var(--good-soft);color:var(--good)}
+.graded .uc-opt.on:not(.right){border-color:var(--mark);color:var(--mark);background:var(--mark-soft)}
+.uc-opt:disabled{cursor:default}
+.uc-fb{margin:6px 0 0;font-size:.88rem;font-weight:700}.uc-fb:empty{display:none}
+.ex-ok .uc-fb{color:var(--good)}.ex-no .uc-fb{color:var(--mark)}
+.uc-foot{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px}
+.uc-res .ok{color:var(--good)}.uc-res .no{color:var(--mark)}
+@media (max-width:560px){.uc-opts{grid-template-columns:1fr}.uc-q{padding-left:16px;padding-top:44px}.uc-q::before{top:12px}}
+
+/* ---------- Lock screen ---------- */
+.is-locked .ptabs,.is-locked .content,.is-locked .all-ans{display:none!important}
+.lockscreen{max-width:640px;margin:28px 0;padding:26px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.lockscreen h2{margin:10px 0 6px;font:700 1.35rem var(--f-display)}
+.lockscreen p{color:var(--muted);margin:0 0 16px}
+.lk-ico{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}.lk-ico svg{width:24px;height:24px}
+.lk-btns{display:flex;flex-wrap:wrap;gap:10px}
+.lockscreen .unit-check{margin:20px 0 0;box-shadow:none}
+
+/* ---------- Dashboard flashcards tile ---------- */
+.fc-dash{display:flex;align-items:center;gap:16px;margin:-14px 0 36px;padding:18px 22px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);color:var(--ink);text-decoration:none;box-shadow:var(--shadow)}
+.fc-dash:hover{border-color:var(--accent)}
+.fd-ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--mark-soft);color:var(--mark);flex:none}.fd-ico svg{width:22px;height:22px}
+.fd-main{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.fd-t{font:700 1.1rem var(--f-display)}.fd-t b{color:var(--mark)}
+.fd-sub{color:var(--muted);font-size:.88rem}
+.fd-go{font-weight:700;color:var(--accent);white-space:nowrap}
+
+/* ---------- Flashcards page ---------- */
+.fc{max-width:720px;margin:8px 0 48px}
+.fc-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.fc-stats div{display:flex;flex-direction:column;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.fc-stats b{font:800 1.5rem var(--f-display);line-height:1.1}.fc-stats span{font-size:.78rem;color:var(--muted)}
+.fc-stats div:first-child b{color:var(--accent)}.fc-stats div:nth-child(3) b{color:var(--mark)}
+.fc-filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px;font-size:.85rem;color:var(--muted)}
+.fc-type[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.fc-limit,.fc-auto{display:inline-flex;align-items:center;gap:6px;margin-left:6px}
+.fc-limit select{font:inherit;padding:4px 6px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+.fc-card{position:relative;min-height:240px;padding:22px 24px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);text-align:center}
+.fc-card hr{border:0;border-top:1px dashed var(--line-2);margin:18px 0}
+.fc-tags{display:flex;gap:6px;justify-content:center;margin-bottom:14px}
+.pill.new{background:var(--mark-soft);color:var(--mark)}.pill.learn{background:var(--accent-soft);color:var(--accent)}
+.fc-q{margin:0 0 10px;color:var(--muted);font-size:.85rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.fc-big,.fc-ans{display:flex;align-items:center;justify-content:center;gap:12px;font:700 clamp(1.5rem,5vw,2.2rem)/1.2 var(--f-display);overflow-wrap:anywhere}
+.fc-ans{font-size:clamp(1.2rem,4vw,1.6rem);color:var(--accent)}
+.fc-big .speak,.fc-ans .speak{float:none;width:40px;height:40px;margin:0}.fc-big .speak svg,.fc-ans .speak svg{width:20px;height:20px}
+.speak.speaking{background:var(--accent);color:var(--accent-ink)}
+.fc-rule{text-align:left;font-size:1.05rem;line-height:1.6}
+.fc-rule .blank i{font-style:normal;letter-spacing:.06em;color:var(--accent);font-weight:700}
+.fc-ans-rule b{color:var(--accent)}
+.fc-hint{color:var(--muted);font-size:.9rem}
+.fc-mic{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:16px}
+.fc-mic .listening{border-color:var(--mark);color:var(--mark)}
+.fc-heard{font-size:.9rem;color:var(--muted)}
+.fc-score{margin-top:10px;font-size:.92rem;color:var(--muted)}.fc-score .ok{color:var(--good);font-weight:700}.fc-score .no{color:var(--mark);font-weight:700}
+.fc-show{display:flex;flex-direction:column;align-items:center;margin-top:16px}
+.fc-flip{min-width:220px;justify-content:center}
+.fc-grade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:16px}
+.fc-g{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border-radius:12px;border:1px solid var(--line-2);border-bottom-width:3px;background:var(--surface);cursor:pointer}
+.fc-g b{font-size:.98rem}.fc-g small{color:var(--muted);font-size:.78rem}
+.fc-g.g0 b{color:var(--mark)}.fc-g.g1 b{color:var(--muted)}.fc-g.g2 b{color:var(--good)}.fc-g.g3 b{color:var(--accent)}
+.fc-g:hover,.fc-g.suggest{border-color:currentColor;background:var(--surface-2)}
+.fc-g.suggest{box-shadow:0 0 0 2px var(--accent-soft)}
+.fc-keys{margin:8px 0 0;text-align:center;font-size:.78rem;color:var(--muted)}
+.fc-empty{padding:30px 24px;border-radius:18px;background:var(--surface);border:1px solid var(--line);text-align:center}
+.fc-empty h3{margin:0 0 6px;font:700 1.3rem var(--f-display)}.fc-empty p{color:var(--muted);margin:0 0 16px}
+.fc-empty-btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+@media (max-width:560px){.fc-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.fc-keys{display:none}.fc-card{padding:18px 16px}.fc-dash{margin-top:0}}
+@media (hover:none){.fc-keys{display:none}}
