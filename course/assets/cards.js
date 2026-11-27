@@ -193,6 +193,7 @@
       var pct = Math.round(best * 100);
       box.innerHTML = '<span class="' + (pct >= 80 ? 'ok' : 'no') + '">Your pronunciation: ' + pct + '% match</span>' + (pct >= 80 ? '' : ' · listen and repeat');
       var sug = el.querySelector('.fc-g.g' + (pct >= 100 ? 2 : pct >= 80 ? 1 : 0)); if (sug) sug.classList.add('suggest');
+      if (window.NLSfx) NLSfx[pct >= 80 ? 'ok' : 'no']();
     }
     function grade(g) {
       var pv = preview(st(card));
