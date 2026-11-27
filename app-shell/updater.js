@@ -69,16 +69,16 @@
   setTimeout(function () { check(false) }, 2000);
   try { A.addListener('resume', function () { setTimeout(function () { check(false) }, 800) }) } catch (e) { }
 
-  /* Dashboard: show the app version and a "Check for updates" button. */
+  /* Settings page: app version, automatic checks, and a "Check for updates" button. */
   function dash() {
-    if (document.body.getAttribute('data-code') !== 'home') return;
-    var main = document.querySelector('.main'); if (!main) return;
-    var p = document.createElement('p'); p.className = 'upd-ver';
+    if (document.body.getAttribute('data-code') !== 'settings') return;
+    var box = document.querySelector('#set-updates .set-upd'); if (!box) return;
     U.current().then(function (c) {
-      p.innerHTML = '<span>Langua Dutch ' + (window.LANGUA_VERSION || '') + ' <small>(app ' + String(c.native || '').split('+')[0] + ')</small></span> <button type="button" class="upd-check">Check for updates</button><span class="upd-msg" aria-live="polite"></span>';
-      main.appendChild(p);
-      var btn = p.querySelector('.upd-check'), msg = p.querySelector('.upd-msg');
-      btn.onclick = function () { msg.textContent = 'Checking…'; check(true).then(function (m) { msg.textContent = m }) };
+      box.innerHTML = '<div class="set-row"><div class="set-lbl"><b>Langua Dutch ' + (window.LANGUA_VERSION || '') + '</b><small>App ' + String(c.native || '').split('+')[0]
+        + '. New lessons download by themselves each time you open the app.</small></div><div class="set-ctl"><button type="button" class="btn-primary upd-check">Check for updates</button></div></div>'
+        + '<p class="upd-msg" aria-live="polite"></p>';
+      var btn = box.querySelector('.upd-check'), msg = box.querySelector('.upd-msg');
+      btn.onclick = function () { msg.textContent = 'Checking…'; btn.disabled = true; check(true).then(function (m) { msg.textContent = m; btn.disabled = false }) };
     }).catch(function () {});
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dash); else dash();

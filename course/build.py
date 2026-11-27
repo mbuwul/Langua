@@ -18,8 +18,16 @@ EXAMS = {'A0': 'Foundations check', 'A1': 'Basisexamen Inburgering Buitenland', 
 STAMP = datetime.datetime.now(datetime.timezone.utc).strftime('%d %b %Y, %H:%M UTC')
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
          '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:ital,wght@0,400..700;1,400&family=JetBrains+Mono:wght@500;600;700&display=swap">')
-THEME_INIT = "<script>try{var t=localStorage.getItem('nl-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>"
+# Colour mode and design are set before the page paints. Each design loads its own fonts.
+DESIGN_FONTS = {
+    'paper': 'family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..600&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400',
+    'arcade': 'family=Nunito:ital,wght@0,500..900;1,600',
+}
+THEME_INIT = ("<script>try{var d=document.documentElement,t=localStorage.getItem('nl-theme'),g=localStorage.getItem('nl-design')||'delft',F="
+              + json.dumps(DESIGN_FONTS) + ";if(t)d.setAttribute('data-theme',t);d.setAttribute('data-design',g);"
+              "if(F[g])document.write('<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?'+F[g]+'&display=swap\">')}catch(e){}</script>")
 I = {
+ 'gear': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
  'sun': '<svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
  'moon': '<svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
  'eye': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
@@ -103,13 +111,13 @@ def nav_data(built):
 
 def shell_top(title, up, page_code, crumb):
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
-            f'<title>{html.escape(title)}</title>{THEME_INIT}{FONTS}<link rel="stylesheet" href="{up}assets/style.css"></head>'
+            f'<title>{html.escape(title)}</title>{THEME_INIT}{FONTS}<link rel="stylesheet" href="{up}assets/style.css"><link rel="stylesheet" href="{up}assets/designs.css"></head>'
             f'<body data-up="{up}" data-code="{page_code}">'
             f'<header class="bar"><button type="button" class="icon-btn only-icon menu-btn" aria-label="Open course menu" aria-controls="sidenav" aria-expanded="false">{I["menu"]}</button>'
             f'<a class="brand" href="{up}index.html"><span class="brand-mark">NL</span><span>Nederlands</span></a>'
             f'<span class="crumb">{crumb}</span><span class="bar-sp"></span>'
             f'<span class="bar-prog" title="Units completed"><span class="bar-prog-track"><i></i></span><span class="bar-prog-txt">0 / 0</span></span>'
-            f'<button type="button" class="icon-btn theme-btn" aria-label="Switch light or dark mode">{I["sun"]}{I["moon"]}<span class="lbl">Dark mode</span></button></header>'
+            f'<a class="icon-btn set-btn{" on" if page_code == "settings" else ""}" href="{up}settings.html" aria-label="Settings" title="Settings">{I["gear"]}<span class="lbl">Settings</span></a></header>'
             f'<div class="shell"><nav class="sidenav" id="sidenav" aria-label="Course"></nav><div class="scrim" hidden></div><main class="main" id="main">')
 
 def shell_bottom(up, nav):
@@ -185,16 +193,66 @@ def cards_page(nav):
     out = shell_top('Flashcards', '', 'cards', '<a href="index.html">Dashboard</a><span>/</span>Flashcards') + body + shell_bottom('', nav)
     open(os.path.join(SITE, 'flashcards.html'), 'w', encoding='utf-8').write(out)
 
+def settings_page(nav):
+    def row(title, sub, ctrl):
+        return f'<div class="set-row"><div class="set-lbl"><b>{title}</b><small>{sub}</small></div><div class="set-ctl">{ctrl}</div></div>'
+    def seg(pref, opts):
+        return f'<div class="seg" role="radiogroup" data-pref="{pref}">' + ''.join(f'<button type="button" role="radio" data-v="{v}">{t}</button>' for v, t in opts) + '</div>'
+    def sw(pref, label):
+        return f'<button type="button" class="switch" role="switch" data-pref="{pref}" aria-label="{label}"><i></i></button>'
+    designs = [
+        ('delft', 'Delft', 'Clean and professional, in Delft blue with Dutch orange. A menu on the side and tabs for each part.'),
+        ('paper', 'Paper', 'An elegant book. Serif type on cream pages with oxblood ink, a contents list instead of tabs.'),
+        ('arcade', 'Quest', 'A game meets an online course. A lesson path, a progress bar for every unit, chunky buttons and a tab bar at the bottom.'),
+    ]
+    dz = ''.join(
+        f'<button type="button" class="design" role="radio" data-design="{k}" aria-checked="false">'
+        f'<span class="dz dz-{k}" aria-hidden="true"><span class="dz-bar"><i></i><i></i></span><span class="dz-body"><span class="dz-aa">Aa</span>'
+        f'<span class="dz-h">Huis en stad</span><span class="dz-l"></span><span class="dz-l s"></span><span class="dz-btn">Check</span></span><span class="dz-tab"><i></i><i></i><i></i><i></i></span></span>'
+        f'<span class="dz-name">{n}<span class="dz-tick">{I["check"]}</span></span><span class="dz-desc">{d}</span></button>' for k, n, d in designs)
+    fonts = '&'.join(DESIGN_FONTS.values())
+    body = (f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{fonts}&display=swap">'
+            '<section class="hero set-hero"><div class="chips"><span class="chip">Settings</span></div><h1>Settings</h1>'
+            '<p class="lead">Make the course look and work the way you like. Changes are saved on this device straight away.</p></section>'
+            '<div class="settings" id="settings">'
+            '<section class="set-sec" id="set-look"><h2>Appearance</h2><p class="set-sub">Choose a design. Each one changes the whole app: colours, type, layout and how you move around.</p>'
+            f'<div class="designs" role="radiogroup" aria-label="Design">{dz}</div>'
+            + row('Colour mode', 'Auto follows your phone or computer.', seg('theme', [('auto', 'Auto'), ('light', 'Light'), ('dark', 'Dark')])) +
+            '</section>'
+            '<section class="set-sec"><h2>Sound and speech</h2>'
+            + row('Sound effects', 'A chime for right answers, a buzzer for wrong ones.', sw('sfx', 'Sound effects'))
+            + row('Talking speed', 'How fast the Dutch voice speaks.', seg('rate', [('0.6', 'Slow'), ('0.8', 'Normal'), ('1', 'Natural'), ('1.15', 'Fast')]))
+            + row('English in dialogues', 'Show the English line under each Dutch line.', sw('tr', 'English in dialogues')) +
+            '</section>'
+            '<section class="set-sec"><h2>Flashcards</h2>'
+            + row('New cards a day', 'How many new cards to add each day.', seg('fcnew', [('5', '5'), ('10', '10'), ('20', '20'), ('30', '30'), ('50', '50')]))
+            + row('Play audio on cards', 'Say each word aloud when the card appears.', sw('fcauto', 'Play audio on cards')) +
+            '</section>'
+            '<section class="set-sec" id="set-updates"><h2>Updates</h2><div class="set-upd">'
+            + row('Course version', f'Updated {STAMP}. On a computer, reload the page to get the newest lessons.', '') +
+            '</div></section>'
+            '<section class="set-sec"><h2>Your progress</h2><p class="set-sub">Your progress is saved on this device only. Make a backup code to move it to another phone or computer.</p>'
+            + row('Back up', 'Copy a code that holds your progress and flashcards.', '<button type="button" class="btn-sec set-backup">Make a backup code</button>')
+            + row('Restore', 'Paste a backup code from another device.', '<button type="button" class="btn-sec set-restore">Paste a code</button>')
+            + '<div class="set-code" hidden><textarea rows="4" spellcheck="false" aria-label="Backup code"></textarea><div class="set-code-btns"><button type="button" class="btn-primary set-code-go"></button><span class="set-code-msg" aria-live="polite"></span></div></div>'
+            + row('Start again', 'Erase all progress and flashcards on this device.', '<button type="button" class="btn-sec set-reset">Erase my progress</button>') +
+            '</section>'
+            '<section class="set-sec"><h2>About</h2><p class="set-sub">Langua Dutch: a complete Dutch course for English speakers, from your first sounds (A0) to C1 and the NT2 exams. '
+            'Speech uses the free voice and speech recognition on your device.</p></section>'
+            '</div>')
+    out = shell_top('Settings', '', 'settings', '<a href="index.html">Dashboard</a><span>/</span>Settings') + body + shell_bottom('', nav)
+    open(os.path.join(SITE, 'settings.html'), 'w', encoding='utf-8').write(out)
+
 def main():
     os.makedirs(os.path.join(SITE, 'assets'), exist_ok=True)
-    for f in ('style.css', 'app.js', 'cards.js'): shutil.copy(os.path.join(BASE, 'assets', f), os.path.join(SITE, 'assets', f))
+    for f in ('style.css', 'designs.css', 'app.js', 'cards.js'): shutil.copy(os.path.join(BASE, 'assets', f), os.path.join(SITE, 'assets', f))
     shutil.copy(os.path.join(BASE, 'launcher', 'serve.ps1'), os.path.join(SITE, 'assets', 'serve.ps1'))
     shutil.copy(os.path.join(BASE, 'launcher', 'Start Dutch Course.bat'), os.path.join(SITE, 'Start Dutch Course.bat'))
     built = collect(); nav = nav_data(built)
     order = [u for l in nav for u in l['units'] if u['href']]
     for i, u in enumerate(order):
         unit_page(u['code'], built[u['code']], nav, order[i-1] if i else None, order[i+1] if i < len(order)-1 else None)
-    plan_page(nav); dashboard(nav); cards_page(nav)
+    plan_page(nav); dashboard(nav); cards_page(nav); settings_page(nav)
     deck = deck_data(built, nav)
     open(os.path.join(SITE, 'assets', 'deck.js'), 'w', encoding='utf-8').write('window.DECK=' + json.dumps(deck, ensure_ascii=False, separators=(',', ':')) + ';')
     print('flashcards:', sum(1 for c in deck if c['t'] == 'w'), 'words,', sum(1 for c in deck if c['t'] == 'r'), 'rules')
