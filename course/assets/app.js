@@ -228,7 +228,9 @@
       if(filt){var lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=filt;o.connect(lp);lp.connect(g)}else o.connect(g);
       g.connect(c.destination);o.start(t);o.stop(t+dur+0.05)}
     var S={
-      ok:function(){if(!on())return;tone(1046.5,0,.16,'triangle',.22);tone(1568,.09,.42,'triangle',.22);tone(3136,.09,.3,'sine',.04)},
+      /* the "correct answer" sound: a bright rising ding-ding-ding with a sparkle on top */
+      ok:function(){if(!on())return;[[784,0],[1046.5,.08],[1318.5,.16]].forEach(function(n,i){tone(n[0],n[1],i===2?.55:.16,'square',.07,null,3200);tone(n[0],n[1],i===2?.6:.18,'triangle',.2)});
+        tone(2637,.16,.5,'sine',.06);[3136,3520,4186,3951].forEach(function(f,i){tone(f,.26+i*.05,.14,'sine',.045)})},
       /* the "wrong answer" buzzer: low, harsh, a little falling */
       no:function(){if(!on())return;tone(116,0,.62,'sawtooth',.2,98,1400);tone(123,0,.62,'square',.12,104,1100)},
       win:function(){if(!on())return;[523.25,659.25,783.99,1046.5].forEach(function(f,i){tone(f,i*.11,i===3?.6:.18,'triangle',.2)})},
@@ -551,6 +553,100 @@
     if(isFile&&sayItems.length){var n=document.createElement('p');n.className='callout warn mic-note';
       n.innerHTML='<strong>Microphone:</strong> you opened this page straight from a folder, so the browser will keep asking for the microphone and the speaking checks will not work. Close the browser and double-click '+START+' in your course folder instead. The course then runs at <b>localhost</b> and the microphone works after you allow it once.';
       var l0=sayItems[0].parentNode;l0.parentNode.insertBefore(n,l0)}
+  })();
+
+  /* ---------- Task cards: every exercise, writing, speaking, reading or listening task stands out ---------- */
+  (function(){
+    var TI={practice:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+      write:'<path d="M4 4h16v12H5.2L4 17.2z"/><path d="M8 8h8M8 12h5"/>',
+      speak:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+      read:'<path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/>',
+      listen:'<path d="M3 14v-2a9 9 0 0 1 18 0v2"/><path d="M21 15a2 2 0 0 1-2 2h-1v-6h1a2 2 0 0 1 2 2zM3 15a2 2 0 0 0 2 2h1v-6H5a2 2 0 0 0-2 2z"/>',
+      check:'<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>'};
+    var NAME={practice:'Practice',write:'Writing task',speak:'Speaking task',read:'Reading task',listen:'Listening task',check:'Your task'};
+    function ico(k){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+TI[k]+'</svg>'}
+    function sectionOf(h){var out=[],n=h.nextSibling;while(n&&!(n.nodeType===1&&(/^H[23]$/.test(n.tagName)||n.classList.contains('pnav')||n.classList.contains('complete-box')))){out.push(n);n=n.nextSibling}return out}
+    function kind(title,nodes){var t=title.toLowerCase(),has=function(sel){return nodes.some(function(n){return n.nodeType===1&&(n.matches(sel)||n.querySelector(sel))})},txt=nodes.map(function(n){return n.textContent}).join(' ');
+      var model=/Model answer|^\s*Model:/m.test(txt),ex=has('li.ex'),tl=has('.task-list');
+      if(/marking guide/.test(t))return null;
+      if(/listen|voicemail|heard/.test(t)&&(ex||has('.ans')))return 'listen';
+      if(/\bread|^dialogue|letter|text\b/.test(t)&&(ex||has('.ans')))return 'read';
+      if(/\b(record|recording|role-?play|speak|speaking|say it)\b/.test(t)||(model&&/\bsay\b|\brecord\b/i.test(txt)&&!/write/i.test(t)))return 'speak';
+      if(!ex&&(model||/^(write|an? (email|message|note|letter)|your short profile|exam part d)/.test(t)||/\bwrite\b/i.test(txt.slice(0,200))&&tl))return 'write';
+      if(ex)return 'practice';
+      if(tl)return 'check';
+      return null}
+    var tasks=[];
+    [].slice.call(content.querySelectorAll('.panel > h3, .content > h3')).forEach(function(h){
+      var nodes=sectionOf(h),k=kind(h.textContent,nodes);if(!k)return;
+      var raw=h.textContent.trim(),m=raw.match(/\s*\(([^()]*)\)\s*$/),title=m?raw.slice(0,m.index):raw,meta=m?m[1]:'';
+      title=title.replace(/^(\d+[A-Z]\.|Practice:)\s*/,'');
+      var card=document.createElement('section');card.className='task t-'+k;
+      card.innerHTML='<header class="task-h"><span class="task-ico">'+ico(k)+'</span><div class="task-ht"><span class="task-k">'+NAME[k]+(meta?' · '+esc(meta):'')+'</span></div></header><div class="task-b"></div>';
+      h.parentNode.insertBefore(card,h);h.textContent=title;h.classList.add('task-title');card.querySelector('.task-ht').appendChild(h);
+      var b=card.querySelector('.task-b');nodes.forEach(function(n){b.appendChild(n)});
+      tasks.push({card:card,k:k,title:title,meta:meta});
+      /* in writing and speaking tasks, brackets are hints, not hidden answers */
+      if(k==='write'||k==='speak')card.querySelectorAll('.ans').forEach(function(x){var v=x.querySelector('.ans-val');x.replaceWith(document.createTextNode('('+(v?v.textContent:'')+')'))});
+    });
+    /* Writing: a box to write in, a word count, then the model answer and a marking guide to score yourself */
+    tasks.forEach(function(t,ti){if(t.k!=='write')return;var b=t.card.querySelector('.task-b');
+      var mp=[].filter.call(b.children,function(n){return /^Model answer/.test((n.querySelector&&n.querySelector('strong')||{}).textContent||'')})[0];
+      var model=document.createElement('div');model.className='task-model';model.hidden=true;
+      if(mp){var n=mp;while(n){var nx=n.nextSibling;model.appendChild(n);n=nx}}
+      /* a following "Marking guide" section joins this card */
+      var nx2=t.card.nextElementSibling,guide=null;
+      if(nx2&&nx2.tagName==='H3'&&/marking guide/i.test(nx2.textContent)){guide=document.createElement('div');guide.className='task-guide';var gn=sectionOf(nx2);nx2.remove();gn.forEach(function(x){guide.appendChild(x)})}
+      var wm=(t.meta.match(/(\d+)\s*(?:[–-]|to)\s*(\d+)\s*words/)||[]),lo=+wm[1]||0,hi=+wm[2]||0,k='nl-write:'+CODE+':'+ti;
+      var w=document.createElement('div');w.className='task-write';
+      w.innerHTML='<label class="task-lbl" for="tw-'+ti+'">Write your answer here</label><textarea id="tw-'+ti+'" rows="7" spellcheck="false" autocapitalize="sentences" placeholder="Hoi …"></textarea>'
+        +'<div class="task-wc"><span class="wc"></span>'+(lo?'<span class="wc-aim">Aim for '+lo+'–'+hi+' words</span>':'')+'</div>'
+        +'<div class="task-acts">'+(mp?'<button type="button" class="btn-primary task-cmp">Done: compare with the model</button>':'')+'</div>';
+      b.appendChild(w);if(mp)b.appendChild(model);
+      var ta=w.querySelector('textarea'),wc=w.querySelector('.wc');ta.value=store(k)||'';
+      function cnt(){var n=(ta.value.trim().match(/\S+/g)||[]).length;wc.textContent=n+' word'+(n===1?'':'s');w.classList.toggle('in-range',!!lo&&n>=lo&&n<=hi+10);w.classList.toggle('too-few',!!lo&&n>0&&n<lo)}
+      ta.addEventListener('input',function(){store(k,ta.value);cnt()});cnt();
+      var cmp=w.querySelector('.task-cmp');if(cmp)cmp.addEventListener('click',function(){model.hidden=false;cmp.hidden=true;if(guide)guide.hidden=false;model.scrollIntoView({behavior:'smooth',block:'nearest'})});
+      if(guide){guide.hidden=true;b.appendChild(guide);var tb=guide.querySelector('table'),pass=(guide.textContent.match(/Pass:\s*(\d+)\s*out of\s*(\d+)/)||[]);
+        if(tb){var hs=[].map.call(tb.querySelectorAll('thead th'),function(x){return x.textContent.trim()}),rows=[].slice.call(tb.querySelectorAll('tbody tr'));
+          if(/criterion/i.test(hs[0])&&hs.length>=3){
+            var r=document.createElement('div');r.className='rubric';
+            r.innerHTML='<p class="task-lbl">Mark your writing: tap what fits for each line</p>'+rows.map(function(row,i){var c=[].slice.call(row.children);
+              return '<div class="rb-row"><b>'+c[0].innerHTML+'</b><div class="rb-opts">'+c.slice(1).map(function(td,j){return '<button type="button" class="rb-opt" data-i="'+i+'" data-p="'+(parseInt(hs[j+1])||j)+'"><span>'+(parseInt(hs[j+1])||j)+'</span>'+td.innerHTML+'</button>'}).join('')+'</div></div>'}).join('')
+              +'<p class="rb-total" aria-live="polite"></p>';
+            var w2=tb.closest('.tw')||tb;w2.parentNode.replaceChild(r,w2);
+            var sc={},max=rows.length*(parseInt(hs[hs.length-1])||2),need=+pass[1]||Math.ceil(max*.6);
+            r.addEventListener('click',function(e){var o=e.target.closest('.rb-opt');if(!o)return;var i=o.getAttribute('data-i');
+              r.querySelectorAll('.rb-opt[data-i="'+i+'"]').forEach(function(x){x.classList.toggle('on',x===o)});sc[i]=+o.getAttribute('data-p');
+              var tot=0,n=0;for(var q in sc){tot+=sc[q];n++}var tt=r.querySelector('.rb-total');
+              if(n<rows.length){tt.textContent=tot+' points so far';return}
+              tt.innerHTML='<b>'+tot+' out of '+max+'</b> · '+(tot>=need?'Passed! Well done.':'You need '+need+'. Look at the model, improve your text and mark it again.');tt.className='rb-total '+(tot>=need?'ok':'no');
+              if(window.NLSfx)NLSfx[tot>=need?'win':'no']()});
+            [].forEach.call(guide.querySelectorAll('p'),function(p){if(/Pass:/.test(p.textContent))p.remove()})}}}
+    });
+    /* Speaking: the model stays hidden until you've tried; a timer for timed recordings */
+    tasks.forEach(function(t){if(t.k!=='speak')return;var b=t.card.querySelector('.task-b');
+      var mp=[].filter.call(b.children,function(n){return /^Model/.test((n.querySelector&&n.querySelector('strong')||{}).textContent||'')})[0];
+      var acts=document.createElement('div');acts.className='task-acts';var secs=+(t.meta.match(/(\d+)\s*seconds/)||[])[1]||0,mins=+(t.meta.match(/(\d+)\s*minutes/)||[])[1]||0,dur=secs||mins*60;
+      if(dur)acts.innerHTML='<button type="button" class="btn-primary task-timer"><span>Start the '+(secs?secs+'-second':mins+'-minute')+' timer</span></button>';
+      if(mp){acts.innerHTML+='<button type="button" class="btn-sec task-model-btn">Show the model</button>';var md=document.createElement('div');md.className='task-model';md.hidden=true;md.appendChild(mp);
+        var ls=document.createElement('button');ls.type='button';ls.className='btn-sec task-listen';ls.textContent='Listen to the model';md.appendChild(ls);
+        ls.addEventListener('click',function(){try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(mp.textContent.replace(/^Model:\s*/,'').replace(/["“”]/g,''));u.lang='nl-NL';u.rate=parseFloat(store('nl-rate'))||0.8;speechSynthesis.speak(u)}catch(e){}});
+        b.appendChild(acts);b.appendChild(md);acts.querySelector('.task-model-btn').addEventListener('click',function(){md.hidden=!md.hidden;this.textContent=md.hidden?'Show the model':'Hide the model'})}
+      else b.appendChild(acts);
+      var tm=acts.querySelector('.task-timer');if(tm){var iv=null;tm.addEventListener('click',function(){
+        if(iv){clearInterval(iv);iv=null;tm.classList.remove('running');tm.querySelector('span').textContent='Start again';return}
+        var left=dur;tm.classList.add('running');function tick(){tm.querySelector('span').textContent='Speak now · '+Math.floor(left/60)+':'+('0'+left%60).slice(-2)+' · tap to stop';
+          if(left--<=0){clearInterval(iv);iv=null;tm.classList.remove('running');tm.querySelector('span').textContent='Time! Start again';if(window.NLSfx)NLSfx.ok()}}
+        tick();iv=setInterval(tick,1000)})}
+    });
+    /* Top of each part: what you have to do here */
+    var NAMES={practice:['practice set','practice sets'],write:['writing task','writing tasks'],speak:['speaking task','speaking tasks'],read:['reading task','reading tasks'],listen:['listening task','listening tasks'],check:['checklist','checklists']};
+    panels.forEach(function(pn){var ts=tasks.filter(function(t){return pn.contains(t.card)});if(!ts.length)return;
+      var bx=document.createElement('nav');bx.className='p-todo';bx.setAttribute('aria-label','Your tasks in this part');
+      bx.innerHTML='<span class="p-todo-k">Your tasks in this part</span><span class="p-todo-l">'+ts.map(function(t,i){return '<button type="button" class="p-todo-i t-'+t.k+'" data-t="'+tasks.indexOf(t)+'">'+ico(t.k)+'<span>'+esc(t.title)+'</span></button>'}).join('')+'</span>';
+      var h2=pn.querySelector(':scope > h2');if(h2)h2.parentNode.insertBefore(bx,h2.nextSibling);else pn.insertBefore(bx,pn.firstChild);
+      bx.addEventListener('click',function(e){var x=e.target.closest('.p-todo-i');if(!x)return;var c=tasks[+x.getAttribute('data-t')].card;window.scrollTo({top:c.getBoundingClientRect().top+scrollY-130,behavior:'smooth'})})});
   })();
 
   var allBtn=document.querySelector('.all-ans');
