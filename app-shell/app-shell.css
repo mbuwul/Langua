@@ -15,3 +15,4 @@ html.in-app .main{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
 .upd-check{height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface);color:var(--accent);font-weight:700;cursor:pointer}
 .upd-msg{flex-basis:100%;color:var(--ink)}.upd-msg:empty{display:none}
 .upd-msg{margin:4px 0 0;font-size:.88rem;color:var(--muted)}.upd-msg:empty{display:none}
+.upd-toast{justify-content:center;font-weight:700}
