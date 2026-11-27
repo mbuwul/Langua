@@ -9,6 +9,9 @@
   if (!C || !C.isNativePlatform || !C.isNativePlatform()) return;
   var reg = function (n) { return (C.registerPlugin ? C.registerPlugin(n) : (C.Plugins || {})[n]); };
   var SRP = reg('SpeechRecognition'), TTS = reg('TextToSpeech');
+  /* The app's own speech plugin (since 1.0.9): waits through pauses and retries a failed first start.
+     Older app versions fall back to the community plugin. */
+  var LS = C.isPluginAvailable && C.isPluginAvailable('LanguaSpeech') ? reg('LanguaSpeech') : null;
 
   /* ---------- Speech recognition ---------- */
   function errCode(msg) {
@@ -33,6 +36,18 @@
   NativeSR.prototype.start = function () {
     if (this._on) throw new Error('InvalidStateError: already started');
     var me = this; me._on = true; me._ended = false;
+    if (LS) {
+      me._fire('start', { type: 'start' });
+      LS.start({ language: me.lang || 'nl-NL', maxResults: me.maxAlternatives || 5, maxMs: 15000, silenceMs: 1500 }).then(function (res) {
+        var m = (res && res.matches) || [];
+        if (!m.length) { me._fire('error', { type: 'error', error: 'no-match' }); return; }
+        var alts = m.map(function (t, i) { return { transcript: t, confidence: i === 0 ? 0.9 : 0.5 }; }); alts.isFinal = true;
+        me._fire('result', { type: 'result', resultIndex: 0, results: [alts] });
+      }).catch(function (e) {
+        var c = e && e.code; me._fire('error', { type: 'error', error: /^(no-speech|no-match|network|not-allowed|service-not-allowed|audio-capture|aborted)$/.test(c) ? c : errCode(e) });
+      }).then(function () { me._end(); });
+      return;
+    }
     var ask = SRP.checkPermissions().then(function (p) {
       if (p && p.speechRecognition === 'granted') return p;
       return SRP.requestPermissions();
@@ -55,11 +70,11 @@
   };
   NativeSR.prototype.stop = function () {
     /* The recogniser then delivers what it heard (onresult) and finishes (onend). */
-    if (!this._on) return; try { SRP.stop() } catch (e) {}
+    if (!this._on) return; try { (LS || SRP).stop() } catch (e) {}
     var me = this; setTimeout(function () { me._end(); }, 4000); /* safety net */
   };
   NativeSR.prototype.abort = function () {
-    if (!this._on) return; try { SRP.stop() } catch (e) {}
+    if (!this._on) return; try { (LS || SRP).stop() } catch (e) {}
     this._fire('error', { type: 'error', error: 'aborted' }); this._end();
   };
   NativeSR.prototype.addEventListener = function (n, f) { this['on' + n] = f; };
