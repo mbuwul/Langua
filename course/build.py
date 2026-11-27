@@ -57,6 +57,40 @@ def collect():
             built[code] = {'src': src, 'href': rel, 'title': first_line(src), 'hours': int(hm.group(1)) if hm else None}
     return built
 
+def md_inline(t):
+    t = html.escape(t.strip(), quote=False)
+    t = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', t)
+    t = re.sub(r'(?<![\w*])\*(?!\s)(.+?)\*(?!\w)', r'<i>\1</i>', t)
+    return re.sub(r'`(.+?)`', r'\1', t)
+
+def plain(t):
+    return re.sub(r'[*`]', '', t).strip()
+
+def deck_data(built, nav):
+    """Flashcards: every Dutch|English vocabulary row and every Rule/Pattern/Key idea paragraph, in course order."""
+    cards, seen = [], set()
+    for code in [u['code'] for l in nav for u in l['units'] if u['href']]:
+        lines = open(built[code]['src'], encoding='utf-8').read().split('\n'); section = ''
+        for i, line in enumerate(lines):
+            if line.startswith('#'): section = re.sub(r'^#+\s*(Part \d+:\s*)?', '', line).strip()
+            if line.startswith('|') and i + 1 < len(lines) and re.match(r'^\|\s*:?-', lines[i + 1]):
+                hs = [c.strip().lower() for c in line.strip().strip('|').split('|')]
+                if 'dutch' not in hs or 'english' not in hs or 'who' in hs: continue
+                di, ei, j = hs.index('dutch'), hs.index('english'), i + 2
+                while j < len(lines) and lines[j].startswith('|'):
+                    c = [x.strip() for x in lines[j].strip().strip('|').split('|')]; j += 1
+                    if len(c) <= max(di, ei): continue
+                    nl, en = plain(c[di]), plain(c[ei])
+                    key = nl.lower()
+                    if not nl or not en or key in seen or nl in ('—', '-') or nl.lower() == en.lower(): continue
+                    seen.add(key); cards.append({'t': 'w', 'u': code, 'nl': nl, 'en': en})
+            m = re.match(r'^\*\*((?:Rule|Pattern|Key idea)[^*]*?):?\*\*:?\s*(.+)$', line)
+            if m and 'whole course' not in m.group(1):
+                body = m.group(2).strip(); key = 'r:' + body[:80]
+                if key in seen: continue
+                seen.add(key); cards.append({'t': 'r', 'u': code, 'label': m.group(1).rstrip(':. ').strip(), 'sec': section, 'html': md_inline(body)})
+    return cards
+
 def nav_data(built):
     plan = planned_units(); levels = []
     for c, name, desc, hrs in LEVELS:
@@ -80,6 +114,7 @@ def shell_top(title, up, page_code, crumb):
 
 def shell_bottom(up, nav):
     return (f'</main></div><script>window.COURSE={json.dumps(nav, ensure_ascii=False)};</script>'
+            f'<script src="{up}assets/deck.js"></script><script src="{up}assets/cards.js"></script>'
             f'<script src="{up}assets/app.js"></script></body></html>')
 
 def unit_page(code, info, nav, prev, nxt):
@@ -101,8 +136,9 @@ def unit_page(code, info, nav, prev, nxt):
     if prev: pager += f'<a href="{up}{prev["href"]}"><small>Previous</small>{html.escape(prev["code"] + " " + prev["title"])}</a>'
     if nxt: pager += f'<a class="nx" href="{up}{nxt["href"]}"><small>Next</small>{html.escape(nxt["code"] + " " + nxt["title"])}</a>'
     pager += '</nav>'
-    complete = (f'<section class="complete-box"><div><h3>Finished this unit?</h3><p>Mark it complete to tick it off in the menu and update your progress.</p></div>'
-                f'<button type="button" class="btn-primary mark-done">{I["check"]}<span>Mark unit as complete</span></button></section>')
+    complete = (f'<section class="complete-box unit-check" id="unit-check"><div class="uc-head"><p class="eyebrow">Unit check</p><h3>Pass this unit</h3>'
+                f'<p class="uc-intro">Answer a short set of questions from this unit. Score 80% or more to complete it and unlock the next unit.</p></div>'
+                f'<button type="button" class="btn-primary uc-start">{I["check"]}<span>Start the unit check</span></button><div class="uc-body" hidden></div></section>')
     crumb = f'<a href="{up}index.html">Dashboard</a><span>/</span>Level {lv}<span>/</span>{code}'
     out = shell_top(info['title'], up, code, crumb) + hero + f'<article class="content">{body}{complete}{pager}</article>' + shell_bottom(up, nav)
     dest = os.path.join(SITE, rel); os.makedirs(os.path.dirname(dest), exist_ok=True)
@@ -132,22 +168,35 @@ def dashboard(nav):
   <div class="stat"><span class="eyebrow">Study time done</span><b id="st-hours">0 h</b><span>of about 1,170 hours to C1</span></div>
   <div class="stat"><span class="eyebrow">Units available</span><b>{ready}</b><span>more are added as they're written</span></div>
 </section>
+<a class="fc-dash" id="fc-dash" href="flashcards.html" hidden><span class="fd-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v11"/></svg></span>
+  <span class="fd-main"><span class="eyebrow">Flashcards</span><span class="fd-t"><b>0</b> cards to study now</span><span class="fd-sub"></span></span><span class="fd-go">Study &rarr;</span></a>
 <section class="levels-sec"><div class="sec-h"><h2>Your path to C1</h2><a href="00-Course-Blueprint.html">Course plan &rarr;</a></div>
   <ol class="path" id="path"></ol></section>
 <p class="updated dash-upd">Updated {STAMP}</p>'''
     out = shell_top('Nederlands Dashboard', '', 'home', 'Dashboard') + body + shell_bottom('', nav)
     open(os.path.join(SITE, 'index.html'), 'w', encoding='utf-8').write(out)
 
+def cards_page(nav):
+    body = ('<section class="hero fc-hero"><div class="chips"><span class="chip">Practice</span></div><h1>Flashcards</h1>'
+            '<p class="lead">Words, pronunciation and rules from the units you have opened. Rate each card honestly: '
+            'easy cards come back after days or weeks, hard ones come back soon.</p></section>'
+            '<section class="fc" id="fc" aria-live="polite"></section>')
+    out = shell_top('Flashcards', '', 'cards', '<a href="index.html">Dashboard</a><span>/</span>Flashcards') + body + shell_bottom('', nav)
+    open(os.path.join(SITE, 'flashcards.html'), 'w', encoding='utf-8').write(out)
+
 def main():
     os.makedirs(os.path.join(SITE, 'assets'), exist_ok=True)
-    for f in ('style.css', 'app.js'): shutil.copy(os.path.join(BASE, 'assets', f), os.path.join(SITE, 'assets', f))
+    for f in ('style.css', 'app.js', 'cards.js'): shutil.copy(os.path.join(BASE, 'assets', f), os.path.join(SITE, 'assets', f))
     shutil.copy(os.path.join(BASE, 'launcher', 'serve.ps1'), os.path.join(SITE, 'assets', 'serve.ps1'))
     shutil.copy(os.path.join(BASE, 'launcher', 'Start Dutch Course.bat'), os.path.join(SITE, 'Start Dutch Course.bat'))
     built = collect(); nav = nav_data(built)
     order = [u for l in nav for u in l['units'] if u['href']]
     for i, u in enumerate(order):
         unit_page(u['code'], built[u['code']], nav, order[i-1] if i else None, order[i+1] if i < len(order)-1 else None)
-    plan_page(nav); dashboard(nav)
+    plan_page(nav); dashboard(nav); cards_page(nav)
+    deck = deck_data(built, nav)
+    open(os.path.join(SITE, 'assets', 'deck.js'), 'w', encoding='utf-8').write('window.DECK=' + json.dumps(deck, ensure_ascii=False, separators=(',', ':')) + ';')
+    print('flashcards:', sum(1 for c in deck if c['t'] == 'w'), 'words,', sum(1 for c in deck if c['t'] == 'r'), 'rules')
     print('built', len(order), 'units')
 
 if __name__ == '__main__':

@@ -3,17 +3,21 @@
   var COURSE=window.COURSE||[];
   function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-  var P={done:{},parts:{},last:null};try{var raw=JSON.parse(store('nl-progress')||'null');if(raw)P={done:raw.done||{},parts:raw.parts||{},last:raw.last||null}}catch(e){}
+  var P={done:{},parts:{},last:null,score:{}};try{var raw=JSON.parse(store('nl-progress')||'null');if(raw)P={done:raw.done||{},parts:raw.parts||{},last:raw.last||null,score:raw.score||{}}}catch(e){}
   function save(){store('nl-progress',JSON.stringify(P))}
   var ICON={check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
     chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
     home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
     map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>',
+    cards:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v11"/></svg>',
     lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'};
 
   var units=[];COURSE.forEach(function(l){l.units.forEach(function(u){u.level=l.code;units.push(u)})});
   var avail=units.filter(function(u){return u.href});
   function doneCount(list){return list.filter(function(u){return P.done[u.code]}).length}
+  /* Units open one after another: a unit unlocks when the one before it has been passed. */
+  function unlocked(code){var i=avail.map(function(u){return u.code}).indexOf(code);return i<=0||!!P.done[code]||!!P.done[avail[i-1].code]}
+  function nextUp(){return avail.filter(function(u){return !P.done[u.code]&&unlocked(u.code)})[0]||null}
   function levelOf(code){return COURSE.filter(function(l){return l.code===code.split('.')[0]})[0]}
 
   /* ---------- Theme ---------- */
@@ -55,13 +59,16 @@
       if(m&&st.parentNode.parentNode===content||m&&st.parentNode.parentNode.classList&&st.parentNode.parentNode.classList.contains('panel'))st.parentNode.className='callout'+(/careful|watch|trap/i.test(m[1])?' warn':/rule|pattern|key idea/i.test(m[1])?' rule':'')});
   }
   var isUnit=/^(A0|A1|A2|B1|B2|C1)\.\d+$/.test(CODE);
-  if(isUnit){P.last=CODE;var rec=P.parts[CODE]||{seen:{},total:0};rec.total=parts.length;P.parts[CODE]=rec;save()}
+  var LOCKED=isUnit&&!unlocked(CODE);
+  if(isUnit){var rec=P.parts[CODE]||{seen:{},total:0};rec.total=parts.length;if(LOCKED){if(!P.parts[CODE])rec.locked=1}else{delete rec.locked;P.last=CODE}P.parts[CODE]=rec;save()}
 
   /* ---------- Sidebar ---------- */
   var nav=document.getElementById('sidenav');
+  function fcDue(){try{return window.NLCards?NLCards.summary().now:0}catch(e){return 0}}
+  if(window.NLCards)NLCards.onChange=function(){renderNav()};
   function unitIcon(u){
     if(P.done[u.code])return '<span class="sn-ico done">'+ICON.check+'</span>';
-    if(!u.href)return '<span class="sn-ico locked">'+ICON.lock+'</span>';
+    if(!u.href||!unlocked(u.code))return '<span class="sn-ico locked">'+ICON.lock+'</span>';
     if(u.code===CODE)return '<span class="sn-ico cur"></span>';
     var r=P.parts[u.code];if(r&&Object.keys(r.seen).length)return '<span class="sn-ico started"></span>';
     return '<span class="sn-ico"></span>';
@@ -73,6 +80,7 @@
     var total=units.length,dn=doneCount(units);
     var h='<div class="sn-inner"><div class="sn-top">'
       +'<a class="sn-link'+(CODE==='home'?' on':'')+'" href="'+UP+'index.html">'+ICON.home+'<span>Dashboard</span></a>'
+      +'<a class="sn-link'+(CODE==='cards'?' on':'')+'" href="'+UP+'flashcards.html">'+ICON.cards+'<span>Flashcards</span>'+(fcDue()?'<span class="sn-badge-n" title="Cards to study now">'+fcDue()+'</span>':'')+'</a>'
       +'<a class="sn-link'+(CODE==='plan'?' on':'')+'" href="'+UP+'00-Course-Blueprint.html">'+ICON.map+'<span>Course plan</span></a></div>'
       +'<div class="sn-prog"><div class="sn-prog-row"><span>Course progress</span><b>'+Math.round(100*dn/Math.max(total,1))+'%</b></div><div class="track"><i style="width:'+(100*dn/Math.max(total,1))+'%"></i></div><small>'+dn+' of '+total+' units complete</small></div>'
       +'<p class="sn-label">Levels</p><div class="sn-levels">';
@@ -85,7 +93,7 @@
         +'<svg class="ring" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" class="ring-bg"/><circle cx="12" cy="12" r="9" class="ring-fg'+(pct?'':' zero')+'" stroke-dasharray="'+(C*pct)+' '+C+'" transform="rotate(-90 12 12)"/></svg>'
         +'<span class="chev">'+ICON.chev+'</span></button><div class="sn-panel"><ul class="sn-units">';
       l.units.forEach(function(u){
-        var cls='sn-unit'+(P.done[u.code]?' done':'')+(u.code===CODE?' current':'')+(!u.href?' locked':'');
+        var cls='sn-unit'+(P.done[u.code]?' done':'')+(u.code===CODE?' current':'')+(!u.href||!unlocked(u.code)?' locked':'');
         var inner=unitIcon(u)+'<span class="sn-ut"><span class="sn-uc">'+u.code+'</span><span class="sn-tt">'+esc(u.title)+'</span></span>'+(!u.href?'<span class="soon">Soon</span>':'');
         h+='<li>'+(u.href?'<a class="'+cls+'" href="'+UP+u.href+'"'+(u.code===CODE?' aria-current="page"':'')+'>'+inner+'</a>':'<span class="'+cls+'" aria-disabled="true">'+inner+'</span>');
         if(u.code===CODE&&parts.length){
@@ -109,7 +117,6 @@
     document.querySelectorAll('.bar-prog-txt').forEach(function(t){t.textContent=dn+' / '+total+' units'});
     document.querySelectorAll('.bar-prog-track i').forEach(function(i){i.style.width=(100*dn/Math.max(total,1))+'%'});
     var chip=document.querySelector('.done-chip');if(chip)chip.hidden=!P.done[CODE];
-    var mb=document.querySelector('.mark-done');if(mb){var on=!!P.done[CODE];mb.classList.toggle('is-done',on);mb.querySelector('span').textContent=on?'Completed (click to undo)':'Mark unit as complete'}
   }
   renderNav();
 
@@ -162,16 +169,14 @@
     show(h0>=0?h0:(rec0.tab||0),false);
   }
 
-  /* Mark complete */
-  var mark=document.querySelector('.mark-done');
-  if(mark)mark.addEventListener('click',function(){if(P.done[CODE])delete P.done[CODE];else P.done[CODE]=Date.now();save();renderNav();
-    if(P.done[CODE]){var rec=P.parts[CODE];parts.forEach(function(p){rec.seen[p.id]=1});save();renderNav()}if(tabs)show(curIdx,false)});
 
   /* ---------- Dashboard ---------- */
   if(CODE==='home'){
     var next=null;
-    if(P.last&&!P.done[P.last])next=avail.filter(function(u){return u.code===P.last})[0];
-    if(!next)next=avail.filter(function(u){return !P.done[u.code]})[0];
+    if(P.last&&!P.done[P.last]&&unlocked(P.last))next=avail.filter(function(u){return u.code===P.last})[0];
+    if(!next)next=nextUp();
+    var fd=document.getElementById('fc-dash');if(fd&&window.NLCards){var fs=NLCards.summary();fd.hidden=false;
+      fd.querySelector('b').textContent=fs.now;fd.querySelector('.fd-sub').textContent=fs.total?(fs.now?fs.due+' to review · '+fs.newLeft+' new · '+fs.learn+' learning':'All caught up for now · '+fs.known+' cards learned'):'Open a unit to get your first cards'}
     var cont=document.getElementById('continue');
     if(cont&&next){var lv=levelOf(next.code),rec=P.parts[next.code],pc=rec&&rec.total?Math.round(100*Object.keys(rec.seen).length/rec.total):0;
       cont.href=next.href;cont.querySelector('.eyebrow').textContent=pc?'Continue where you left off':'Up next';
@@ -185,21 +190,24 @@
     document.getElementById('st-hours').textContent=hrs+' h';
     var path=document.getElementById('path'),ph='';
     COURSE.forEach(function(l){
-      var d=doneCount(l.units),n=l.units.length,a=l.units.filter(function(u){return u.href}).length,first=l.units.filter(function(u){return u.href&&!P.done[u.code]})[0]||l.units.filter(function(u){return u.href})[0];
+      var d=doneCount(l.units),n=l.units.length,a=l.units.filter(function(u){return u.href}).length,first=l.units.filter(function(u){return u.href&&!P.done[u.code]})[0]||l.units.filter(function(u){return u.href})[0],lk=first&&!unlocked(first.code);
       var st=d===n?'Completed':(d>0||l.units.some(function(u){return P.parts[u.code]}))?'In progress':a?'Ready to start':'Coming soon';
       var stc=d===n?'ok':st==='In progress'?'go':a?'ready':'soon';
       ph+='<li class="lvl lv-'+l.code+'"><div class="lvl-badge">'+l.code+'</div><div class="lvl-main"><div class="lvl-top"><h3>'+esc(l.name)+'</h3><span class="pill '+stc+'">'+st+'</span></div>'
         +'<p>'+esc(l.desc)+'</p><p class="lvl-exam"><span>Exam project</span>'+esc(l.exam)+'</p>'
         +'<div class="lvl-bar"><div class="track"><i style="width:'+(100*d/n)+'%"></i></div><span>'+d+' / '+n+' units done · '+a+' available</span></div></div>'
-        +'<div class="lvl-cta">'+(first?'<a class="btn-sec" href="'+first.href+'">'+(d?'Continue':'Open')+' '+first.code+'</a>':'<span class="btn-sec disabled">Coming soon</span>')+'</div></li>';
+        +'<div class="lvl-cta">'+(first?'<a class="btn-sec'+(lk?' is-locked':'')+'" href="'+first.href+'">'+(lk?ICON.lock+' Locked':(d?'Continue':'Open')+' '+first.code)+'</a>':'<span class="btn-sec disabled">Coming soon</span>')+'</div></li>';
     });
     path.innerHTML=ph;
   }
 
+  /* ---------- Flashcards page ---------- */
+  if(CODE==='cards'&&window.NLCards){var fcEl=document.getElementById('fc');if(fcEl)NLCards.mount(fcEl,UP)}
+
   if(!content)return;
 
   /* ---------- Hidden answers ---------- */
-  var all=[];
+  var all=[],EXS=[];
   function makeReveal(node){
     var wrap=document.createElement('span');wrap.className='ans';
     var btn=document.createElement('button');btn.type='button';btn.className='ans-btn';btn.textContent='Show answer';
@@ -301,7 +309,7 @@
         return;
         return;
       }
-      var shown=ans.split('|')[0],tm=h.match(/\{\{([^}]+)\}\}/),ctl;
+      var shown=ans.split('|')[0],tm=h.match(/\{\{([^}]+)\}\}/),ctl;EXS.push({h:h,ans:ans,tiles:tm?tm[1]:null});
       if(tm){
         host.innerHTML=h.slice(0,tm.index)+'<span class="tl-slot"></span>'+h.slice(tm.index+tm[0].length);
         var tiles=tm[1].split(' / ').map(function(t){return t.trim()}).filter(Boolean),order=tiles.slice();
@@ -393,4 +401,91 @@
         q.insertBefore(b,q.firstChild)});
     }
   }
+
+  /* ---------- Unit check: pass 80% to complete the unit and unlock the next ---------- */
+  (function(){
+    var box=document.getElementById('unit-check');if(!box||!isUnit)return;
+    var startB=box.querySelector('.uc-start'),ub=box.querySelector('.uc-body'),h3=box.querySelector('h3'),intro=box.querySelector('.uc-intro');
+    var me=avail.map(function(u){return u.code}).indexOf(CODE),nextU=avail[me+1]||null,PASS=80;
+    function norm(s){return String(s).toLowerCase().replace(/[’‘`´]/g,"'").replace(/[.,!?;:"“”()]/g,' ').replace(/\s+/g,' ').trim()}
+    function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+    function paint(){
+      if(P.done[CODE]){box.classList.add('passed');h3.textContent='Unit passed'+(P.score[CODE]!=null?' with '+P.score[CODE]+'%':'');
+        intro.innerHTML=nextU?'The next unit is open: <a href="'+UP+nextU.href+'">'+esc(nextU.code+' '+nextU.title)+' &rarr;</a> Its words and rules are now in your <a href="'+UP+'flashcards.html">flashcards</a>.':'You have passed every unit available so far. New units are on the way.';
+        startB.querySelector('span').textContent='Retake the unit check';startB.className='btn-sec uc-start'}
+    }
+    function build(){
+      var words=window.NLCards?NLCards.unitCards(CODE).filter(function(c){return c.t==='w'}):[],all=(window.DECK||[]).filter(function(c){return c.t==='w'});
+      var ex=shuffle(EXS),N=10,nEx=Math.min(ex.length,words.length>=6?4:N),nW=Math.min(N-nEx,words.length);
+      if(nEx+nW<N)nEx=Math.min(ex.length,N-nW);
+      var qs=ex.slice(0,nEx).map(function(e){return {k:e.tiles?'tile':'type',e:e}});
+      shuffle(words).slice(0,nW).forEach(function(w,i){
+        var rev=i%2===1,src=words.length>=4?words:all,opts=[w];
+        shuffle(src).forEach(function(o){if(opts.length<4&&norm(rev?o.nl:o.en)!==norm(rev?w.nl:w.en))opts.push(o)});
+        qs.push({k:'mc',w:w,rev:rev,opts:shuffle(opts)})});
+      return shuffle(qs);
+    }
+    var qs=[];
+    function render(){
+      qs=build();
+      if(qs.length<3){ub.hidden=false;ub.innerHTML='<p>This unit has no automatic questions. Work through every part, then confirm.</p><button type="button" class="btn-primary uc-confirm">I have finished this unit</button>';
+        ub.querySelector('.uc-confirm').onclick=function(){pass(100)};return}
+      var h='<ol class="uc-list">';
+      qs.forEach(function(q,i){
+        h+='<li class="uc-q" data-i="'+i+'">';
+        if(q.k==='mc'){h+='<p class="uc-p">'+(q.rev?'How do you say <b>'+esc(q.w.en)+'</b> in Dutch?':'What does <b>'+esc(q.w.nl)+'</b> mean?')+'</p><div class="uc-opts">'
+          +q.opts.map(function(o,j){return '<button type="button" class="uc-opt" data-j="'+j+'">'+esc(q.rev?o.nl:o.en)+'</button>'}).join('')+'</div>'}
+        else if(q.k==='type'){var inp='<input type="text" class="ex-in uc-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" style="width:'+Math.max(5,Math.min(28,q.e.ans.split('|')[0].length+2))+'ch">';
+          h+='<p class="uc-p">'+(/_{3,}/.test(q.e.h)?q.e.h.replace(/_{3,}/,inp):q.e.h+' '+inp)+'</p>'}
+        else{var t=q.e.tiles.split(' / ').map(function(x){return x.trim()}).filter(Boolean);
+          h+='<p class="uc-p">'+q.e.h.replace(/\{\{[^}]+\}\}/,'')+'</p><div class="tl"><div class="tl-line"><span class="tl-ph">Tap the words in the right order</span></div><div class="tl-bank">'+shuffle(t).map(function(x){return '<button type="button" class="tile">'+x+'</button>'}).join('')+'</div></div>'}
+        h+='<p class="uc-fb"></p></li>'});
+      h+='</ol><div class="uc-foot"><button type="button" class="btn-primary uc-submit">Check my answers</button><span class="uc-res" aria-live="polite"></span></div>';
+      ub.innerHTML=h;ub.hidden=false;startB.hidden=true;
+      var f=ub.querySelector('.uc-in');if(f)try{f.focus({preventScroll:true})}catch(e){}
+    }
+    ub.addEventListener('click',function(e){
+      var o=e.target.closest('.uc-opt');if(o&&!ub.classList.contains('graded')){o.parentNode.querySelectorAll('.uc-opt').forEach(function(x){x.classList.toggle('on',x===o)});return}
+      var t=e.target.closest('.tile');if(t&&!ub.classList.contains('graded')){var tl=t.closest('.tl'),line=tl.querySelector('.tl-line'),bank=tl.querySelector('.tl-bank');(t.parentNode===bank?line:bank).appendChild(t);line.querySelector('.tl-ph').hidden=!!line.querySelector('.tile');return}
+      if(e.target.closest('.uc-submit'))grade();
+      if(e.target.closest('.uc-retry')){ub.classList.remove('graded');render();box.scrollIntoView({behavior:'smooth',block:'start'})}
+    });
+    ub.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.classList.contains('uc-in')){e.preventDefault();var all=[].slice.call(ub.querySelectorAll('.uc-in')),n=all[all.indexOf(e.target)+1];if(n)n.focus();else grade()}});
+    function grade(){
+      var ok=0;
+      ub.querySelectorAll('.uc-q').forEach(function(li){var q=qs[+li.getAttribute('data-i')],good=false,right='',fb=li.querySelector('.uc-fb');
+        if(q.k==='mc'){var sel=li.querySelector('.uc-opt.on');good=!!sel&&q.opts[+sel.getAttribute('data-j')]===q.w;right=q.rev?q.w.nl:q.w.en;
+          li.querySelectorAll('.uc-opt').forEach(function(b){if(q.opts[+b.getAttribute('data-j')]===q.w)b.classList.add('right');b.disabled=true})}
+        else if(q.k==='type'){var v=li.querySelector('.uc-in').value;good=q.e.ans.split('|').some(function(a){return norm(a)===norm(v)&&norm(v)!==''});right=q.e.ans.split('|')[0];li.querySelector('.uc-in').readOnly=true}
+        else{var got=[].map.call(li.querySelectorAll('.tl-line .tile'),function(x){return x.textContent}).join(' ');good=norm(got)===norm(q.e.ans)||q.e.ans.split('|').some(function(a){return norm(a)===norm(got)});right=q.e.ans.split('|')[0]}
+        li.classList.toggle('ex-ok',good);li.classList.toggle('ex-no',!good);fb.textContent=good?'Correct':'Answer: '+right;if(good)ok++});
+      var pct=Math.round(100*ok/qs.length),res=ub.querySelector('.uc-res');ub.classList.add('graded');
+      var foot=ub.querySelector('.uc-foot');ub.querySelector('.uc-submit').remove();
+      if(pct>=PASS){res.innerHTML='<b class="ok">'+pct+'%: passed!</b>';pass(pct)}
+      else{res.innerHTML='<b class="no">'+pct+'%.</b> You need '+PASS+'%. Look at the answers above, go back over those parts, then try a new set.';
+        var r=document.createElement('button');r.type='button';r.className='btn-primary uc-retry';r.textContent='Try a new set';foot.insertBefore(r,res)}
+    }
+    function pass(pct){
+      var first=!P.done[CODE];P.done[CODE]=Date.now();P.score[CODE]=Math.max(pct,P.score[CODE]||0);
+      var rec=P.parts[CODE]||{seen:{}};delete rec.locked;parts.forEach(function(p){rec.seen[p.id]=1});P.parts[CODE]=rec;
+      save();
+      if(LOCKED){location.reload();return}
+      renderNav();paint();startB.hidden=false;
+      if(first&&nextU){var a=document.createElement('a');a.className='btn-primary uc-next';a.href=UP+nextU.href;a.innerHTML='Go to '+esc(nextU.code)+' &rarr;';ub.querySelector('.uc-foot')?ub.querySelector('.uc-foot').appendChild(a):ub.appendChild(a)}
+    }
+    startB.addEventListener('click',function(){ub.classList.remove('graded');render()});
+    paint();
+
+    /* A locked unit shows a lock screen; learners who already know it can test out with the unit check. */
+    if(LOCKED){
+      var go=nextUp(),lk=document.createElement('section');lk.className='lockscreen';
+      lk.innerHTML='<div class="lk-ico">'+ICON.lock+'</div><h2>This unit is locked</h2><p>Units open one at a time, so each new unit builds on what you already know. '
+        +(go?'Pass the unit check of <b>'+esc(go.code+' '+go.title)+'</b> to move forward.':'')+'</p><div class="lk-btns">'
+        +(go?'<a class="btn-primary" href="'+UP+go.href+'">Go to '+esc(go.code)+' &rarr;</a>':'')
+        +'<button type="button" class="btn-sec lk-test">I already know this: take the unit check</button></div>';
+      body.classList.add('is-locked');var main=document.querySelector('.main'),hero=document.querySelector('.hero');
+      hero.parentNode.insertBefore(lk,hero.nextSibling);
+      lk.querySelector('.lk-test').addEventListener('click',function(){this.remove();lk.appendChild(box);intro.textContent='Score 80% or more to unlock this unit straight away.';startB.click()});
+    }
+  })();
 })();
