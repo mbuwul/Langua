@@ -10,3 +10,7 @@ html.in-app .main{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
 .upd-bar button{height:38px;padding:0 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
 .upd-go{background:var(--accent);color:var(--accent-ink)}
 .upd-later{background:transparent;color:inherit;opacity:.8}
+.upd-ver{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:24px 0 8px;font-size:.85rem;color:var(--muted)}
+.upd-ver small{opacity:.8}
+.upd-check{height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface);color:var(--accent);font-weight:700;cursor:pointer}
+.upd-msg{flex-basis:100%;color:var(--ink)}.upd-msg:empty{display:none}
