@@ -2,6 +2,21 @@
   "appId": "app.langua.dutch",
   "appName": "Langua Dutch",
   "webDir": "www",
-  "android": { "allowMixedContent": false },
-  "plugins": { "SystemBars": { "insetsHandling": "css", "initialViewportFitValueHint": "cover" } }
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover"
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "resetWhenUpdate": true,
+      "statsUrl": "",
+      "channelUrl": "",
+      "updateUrl": "",
+      "appReadyTimeout": 10000
+    }
+  }
 }

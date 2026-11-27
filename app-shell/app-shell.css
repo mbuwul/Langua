@@ -3,3 +3,10 @@ html.in-app{-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
 /* Fill the strip behind the phone's status bar so text never scrolls under the clock and battery icons. */
 html.in-app body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:70}
 html.in-app .main{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+/* In-app update bar */
+.upd-bar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:90;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 14px;border-radius:14px;background:var(--ink);color:var(--paper);box-shadow:0 8px 30px rgba(0,0,0,.3);font-size:.92rem;font-weight:600}
+.upd-btns{display:flex;gap:8px;margin-left:auto}
+.upd-bar button{height:38px;padding:0 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+.upd-go{background:var(--accent);color:var(--accent-ink)}
+.upd-later{background:transparent;color:inherit;opacity:.8}

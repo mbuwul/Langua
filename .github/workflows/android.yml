@@ -37,23 +37,42 @@ jobs:
       - name: Install app tools
         run: npm ci
 
+      - name: Work out version numbers
+        run: |
+          echo "WEB_BUILD=${{ github.run_number }}" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=${{ github.run_number }}" >> "$GITHUB_ENV"
+          # Fingerprint of the Android part of the app. When it changes, phones need the new APK;
+          # otherwise they only download the new lessons (www.zip) inside the app.
+          echo "NATIVE_HASH=$(git ls-files -s android package-lock.json capacitor.config.json | sha256sum | cut -c1-10)" >> "$GITHUB_ENV"
+
       - name: Build the course and copy it into the app
         run: npm run sync
 
       - name: Build the APK
         working-directory: android
-        env:
-          VERSION_CODE: ${{ github.run_number }}
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
           cp app/build/outputs/apk/release/app-release.apk ../Langua-Dutch.apk
 
-      - name: Keep the APK with this run
+      - name: Package the in-app update
+        run: |
+          (cd www && zip -qr ../www.zip .)
+          BASE="https://github.com/${{ github.repository }}/releases/download/v1.0.${{ github.run_number }}"
+          cat > update.json <<JSON
+          {"version": "1.0.${{ github.run_number }}", "build": ${{ github.run_number }}, "nativeHash": "$NATIVE_HASH",
+           "zip": "$BASE/www.zip", "apk": "$BASE/Langua-Dutch.apk"}
+          JSON
+          cat update.json
+
+      - name: Keep the files with this run
         uses: actions/upload-artifact@v4
         with:
-          name: Langua-Dutch-apk
-          path: Langua-Dutch.apk
+          name: Langua-Dutch
+          path: |
+            Langua-Dutch.apk
+            www.zip
+            update.json
 
       - name: Publish on the Releases page
         if: github.event_name != 'pull_request'
@@ -61,6 +80,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="v1.0.${{ github.run_number }}"
-          gh release create "$TAG" Langua-Dutch.apk --latest \
+          gh release create "$TAG" Langua-Dutch.apk www.zip update.json --latest \
             --title "Langua Dutch 1.0.${{ github.run_number }}" \
-            --notes "Install on Android: open this page on your phone, tap Langua-Dutch.apk, then Install. Built from ${GITHUB_SHA::7}."
+            --notes "First install on Android: open this page on your phone, tap Langua-Dutch.apk, then Install. After that the app updates itself. Built from ${GITHUB_SHA::7}."
