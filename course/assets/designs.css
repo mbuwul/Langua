@@ -368,3 +368,31 @@
   [data-design="arcade"] .sn-level{background:var(--surface);border:2px solid var(--line);margin-bottom:8px}
   [data-design="arcade"] .sn-label{font-weight:900;color:var(--ink);text-transform:none;letter-spacing:0;font-size:1rem}
 }
+
+/* Task cards per design */
+[data-design="paper"] .task{border-radius:0;box-shadow:none;border:1px solid var(--line-2);outline:1px solid var(--line-2);outline-offset:4px;margin:34px 5px}
+[data-design="paper"] .task-h{background:none;border-bottom:3px double var(--line-2);justify-content:center;text-align:center;flex-direction:column;gap:6px}
+[data-design="paper"] .task-ico{background:none;color:var(--tc);border:1px solid var(--tc);border-radius:50%;width:38px;height:38px}
+[data-design="paper"] .task-k{font:400 .9rem var(--f-body);font-variant:small-caps;letter-spacing:.14em;text-transform:none}
+[data-design="paper"] .content .task h3.task-title{font:italic 600 1.4rem var(--f-display);border:0}
+[data-design="paper"] .task-write textarea{border-radius:0;border:0;border-bottom:1px solid var(--line-2);background:repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px);line-height:32px;font:italic 500 1.08rem/32px var(--f-display);padding:0 4px}
+[data-design="paper"] .task-model{border-radius:0;background:none;border-left:3px solid var(--tc)}
+[data-design="paper"] .rb-opt{border-radius:0}
+[data-design="paper"] .p-todo{background:none;border-radius:0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);align-items:center;text-align:center}
+[data-design="paper"] .p-todo-k{font:400 .9rem var(--f-body);font-variant:small-caps;letter-spacing:.14em;text-transform:none}
+[data-design="paper"] .p-todo-l{justify-content:center}
+[data-design="paper"] .p-todo-i{border-radius:0;background:none;font:italic 500 .95rem var(--f-display)}
+[data-design="arcade"] .task{border-width:2px;border-bottom-width:6px;border-radius:26px;box-shadow:none}
+[data-design="arcade"] .task.t-practice{--tc:var(--accent)}
+[data-design="arcade"] .task.t-write{--tc:var(--lv-C1);--tc-soft:color-mix(in srgb,var(--lv-C1) 12%,var(--surface))}
+[data-design="arcade"] .task.t-speak{--tc:var(--lv-B2);--tc-soft:color-mix(in srgb,var(--lv-B2) 14%,var(--surface))}
+[data-design="arcade"] .task-h{background:var(--tc);border-bottom:0;color:#fff}
+[data-design="arcade"] .task-ico{background:rgba(255,255,255,.22);border-radius:14px}
+[data-design="arcade"] .task-k{color:rgba(255,255,255,.85);font-weight:900}
+[data-design="arcade"] .content .task h3.task-title{color:#fff;font-weight:900}
+[data-design="arcade"] .task .st-head{box-shadow:none}
+[data-design="arcade"] .task-write textarea{border-radius:18px;font-weight:600}
+[data-design="arcade"] .task-model{border-radius:18px}
+[data-design="arcade"] .rb-opt{border-radius:14px;border-width:2px;border-bottom-width:4px}
+[data-design="arcade"] .p-todo{background:var(--surface);border:2px solid var(--line);border-radius:22px}
+[data-design="arcade"] .p-todo-i{border-width:2px;border-bottom-width:4px;font-weight:800;border-radius:14px}

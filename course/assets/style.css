@@ -621,3 +621,49 @@ li.ex-locked .mc-opt{cursor:default}
 .bnav{display:none}
 .ptabs-sum{display:none}
 .hero-prog{display:none}
+
+/* ---------- Task cards: the exercise is the main thing on the page ---------- */
+.task{--tc:var(--accent);--tc-soft:var(--accent-soft);position:relative;margin:30px 0;border-radius:18px;background:var(--surface);border:2px solid color-mix(in srgb,var(--tc) 45%,var(--line));box-shadow:0 10px 30px -12px color-mix(in srgb,var(--tc) 35%,transparent);overflow:hidden;scroll-margin-top:130px}
+.task.t-write{--tc:#7a3d9c;--tc-soft:color-mix(in srgb,#7a3d9c 12%,var(--surface))}
+.task.t-speak{--tc:var(--mark);--tc-soft:var(--mark-soft)}
+.task.t-read,.task.t-listen{--tc:var(--lv-A2);--tc-soft:color-mix(in srgb,var(--lv-A2) 12%,var(--surface))}
+.task.t-check{--tc:var(--good);--tc-soft:var(--good-soft)}
+.task-h{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--tc-soft);border-bottom:1px solid color-mix(in srgb,var(--tc) 25%,var(--line))}
+.task-ico{display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:12px;background:var(--tc);color:#fff}
+.task-ico svg{width:22px;height:22px}
+.task-ht{min-width:0}
+.task-k{display:block;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--tc)}
+.content .task h3.task-title{margin:2px 0 0;font:700 1.2rem/1.25 var(--f-display);border:0;padding:0}
+.task-b{padding:6px 18px 18px}
+.task-b>:first-child{margin-top:12px}
+.task .st-head{margin-top:12px}
+.task .content li.ex,.task-b li.ex{box-shadow:none}
+.task-lbl{display:block;font-weight:700;font-size:.9rem;margin:14px 0 6px}
+.task-write textarea{width:100%;min-height:150px;padding:12px 14px;border-radius:12px;border:2px solid var(--line-2);background:var(--paper);color:var(--ink);font:500 1.02rem/1.6 var(--f-body);resize:vertical}
+.task-write textarea:focus{outline:none;border-color:var(--tc)}
+.task-wc{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;margin-top:6px;font-size:.84rem;color:var(--muted)}
+.task-write .wc{font-weight:700}
+.task-write.in-range .wc{color:var(--good)}.task-write.too-few .wc{color:var(--mark)}
+.task-acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.task-model{margin-top:16px;padding:14px 16px;border-radius:12px;background:var(--surface-2)}
+.task-model>p:first-child{margin-top:0}
+.task-listen{margin-top:8px}
+.task-timer.running{background:var(--mark);animation:pulse 1.2s ease-in-out infinite}
+.task-guide{margin-top:16px}
+.rubric{display:flex;flex-direction:column;gap:12px}
+.rb-row>b{display:block;margin-bottom:6px}
+.rb-opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.rb-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:8px 10px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font:500 .82rem/1.35 var(--f-body);cursor:pointer}
+.rb-opt span{font:800 1rem var(--f-display);color:var(--muted)}
+.rb-opt.on{border-color:var(--tc);background:var(--tc-soft)}.rb-opt.on span{color:var(--tc)}
+.rb-total{font-size:.95rem;margin:4px 0 0}.rb-total.ok b{color:var(--good)}.rb-total.no b{color:var(--mark)}
+@media (max-width:600px){.rb-opt{padding:7px 8px;font-size:.76rem}.task-b{padding:4px 14px 16px}.task-h{padding:12px 14px}.task{margin:22px -4px}}
+/* the list of tasks at the top of a part */
+.p-todo{display:flex;flex-direction:column;gap:8px;margin:0 0 22px;padding:12px 14px;border-radius:14px;background:var(--surface-2)}
+.p-todo-k{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.p-todo-l{display:flex;flex-wrap:wrap;gap:6px}
+.p-todo-i{--tc:var(--accent);display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:99px;border:1px solid color-mix(in srgb,var(--tc) 40%,var(--line));background:var(--surface);color:var(--ink);font:600 .84rem var(--f-body);cursor:pointer;max-width:100%}
+.p-todo-i span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-todo-i svg{width:16px;height:16px;flex:none;color:var(--tc)}
+.p-todo-i.t-write{--tc:#7a3d9c}.p-todo-i.t-speak{--tc:var(--mark)}.p-todo-i.t-read,.p-todo-i.t-listen{--tc:var(--lv-A2)}.p-todo-i.t-check{--tc:var(--good)}
+.p-todo-i:hover{border-color:var(--tc)}
