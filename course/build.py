@@ -121,6 +121,8 @@ def unit_page(code, info, nav, prev, nxt):
     rel = info['href']; up = '../' * rel.count('/')
     body = md2html(info['src'])
     body = re.sub(r'<h1[^>]*>.*?</h1>', '', body, count=1, flags=re.S)
+    # notes for the course builders, not for learners
+    body = re.sub(r'<h2[^>]*>\s*How this unit works in the app\s*</h2>.*?(?=<h2|$)', '', body, flags=re.S)
     _, en, nl = split_title(info['title'])
     lv = code.split('.')[0]; lvname = dict((c, n) for c, n, *_ in LEVELS)[lv]
     m = re.search(r'<h2[^>]*>.*?</h2>\s*<p>(.*?)</p>', body, re.S); lead = m.group(1) if m else ''
@@ -130,8 +132,7 @@ def unit_page(code, info, nav, prev, nxt):
             f'<span class="chip done-chip" hidden>{I["check"]} Completed</span></div>'
             f'<h1>{html.escape(en)}</h1>' + (f'<p class="nl">{html.escape(nl)}</p>' if nl else '')
             + (f'<p class="lead">{lead}</p>' if lead else '')
-            + f'<div class="hero-actions"><button type="button" class="icon-btn all-ans" aria-pressed="false">{I["eye"]}<span class="lbl">Show all answers</span></button>'
-            f'<span class="updated">Updated {STAMP}</span></div></section>')
+            + '</section>')
     pager = '<nav class="pager">'
     if prev: pager += f'<a href="{up}{prev["href"]}"><small>Previous</small>{html.escape(prev["code"] + " " + prev["title"])}</a>'
     if nxt: pager += f'<a class="nx" href="{up}{nxt["href"]}"><small>Next</small>{html.escape(nxt["code"] + " " + nxt["title"])}</a>'
@@ -162,14 +163,14 @@ def dashboard(nav):
   <a class="continue" href="#" id="continue"><span class="eyebrow">Start here</span><span class="c-title">A0.1 How Dutch Works</span>
     <span class="c-meta">Level A0 · Foundations</span><span class="c-bar"><i style="width:0%"></i></span><span class="c-go">Start unit &rarr;</span></a>
 </section>
+<a class="fc-dash" id="fc-dash" href="flashcards.html" hidden><span class="fd-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v11"/></svg></span>
+  <span class="fd-main"><span class="eyebrow">Flashcards</span><span class="fd-t"><b>0</b> cards to study now</span><span class="fd-sub"></span></span><span class="fd-go">Study &rarr;</span></a>
 <section class="stats">
   <div class="stat"><span class="eyebrow">Units completed</span><b id="st-done">0</b><span id="st-done-sub">of {total} in the course</span></div>
   <div class="stat"><span class="eyebrow">Current level</span><b id="st-level">A0</b><span id="st-level-sub">Foundations</span></div>
   <div class="stat"><span class="eyebrow">Study time done</span><b id="st-hours">0 h</b><span>of about 1,170 hours to C1</span></div>
   <div class="stat"><span class="eyebrow">Units available</span><b>{ready}</b><span>more are added as they're written</span></div>
 </section>
-<a class="fc-dash" id="fc-dash" href="flashcards.html" hidden><span class="fd-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v11"/></svg></span>
-  <span class="fd-main"><span class="eyebrow">Flashcards</span><span class="fd-t"><b>0</b> cards to study now</span><span class="fd-sub"></span></span><span class="fd-go">Study &rarr;</span></a>
 <section class="levels-sec"><div class="sec-h"><h2>Your path to C1</h2><a href="00-Course-Blueprint.html">Course plan &rarr;</a></div>
   <ol class="path" id="path"></ol></section>
 <p class="updated dash-upd">Updated {STAMP}</p>'''
