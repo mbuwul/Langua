@@ -14,7 +14,10 @@
   function errCode(msg) {
     msg = String((msg && (msg.message || msg.errorMessage)) || msg || '');
     if (/permission/i.test(msg)) return 'not-allowed';
-    if (/no match|no speech|didn.t understand/i.test(msg)) return 'no-speech';
+    /* Android says "No match" when it heard speech but could not turn it into Dutch words:
+       that is a wrong or unclear answer, not silence. Only "No speech input" means silence. */
+    if (/no match|didn.t understand/i.test(msg)) return 'no-match';
+    if (/no speech/i.test(msg)) return 'no-speech';
     if (/network|server/i.test(msg)) return 'network';
     if (/audio/i.test(msg)) return 'audio-capture';
     if (/not available|unavailable|unimplemented/i.test(msg)) return 'service-not-allowed';
@@ -42,7 +45,7 @@
     }).then(function (res) {
       if (res === null) return;
       var m = (res && res.matches) || [];
-      if (!m.length) { me._fire('error', { type: 'error', error: 'no-speech' }); return; }
+      if (!m.length) { me._fire('error', { type: 'error', error: 'no-match' }); return; }
       var alts = m.map(function (t, i) { return { transcript: t, confidence: i === 0 ? 0.9 : 0.5 }; });
       alts.isFinal = true;
       me._fire('result', { type: 'result', resultIndex: 0, results: [alts] });

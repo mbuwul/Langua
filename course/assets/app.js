@@ -280,6 +280,7 @@
           out.hidden=false;out.innerHTML='<span class="eyebrow">Heard</span> “'+esc(best.heard)+'”<br><span class="eyebrow">Your words</span> '+words.map(function(w,i){return '<span class="'+(best.hit[i]?'w-ok':'w-miss')+'">'+esc(w)+'</span>'}).join(' ');
           mark(li,pct>=80,pct>=100?'Perfect: 100%':pct>=80?'Good: '+pct+'%':'Score '+pct+'%. Listen again and repeat the red words.')};
         r.onerror=function(e){gotResult=true;var m=e.error;
+          if(m==='no-match'){out.hidden=false;out.innerHTML='<span class="eyebrow">Heard</span> something, but not these Dutch words';mark(li,false,'Score 0%. That didn\u2019t match the sentence. Listen to the model, then try again.');return}
           fb.innerHTML=m==='no-speech'?'I heard nothing. Click and speak a little louder, close to the microphone.':m==='aborted'?'Stopped.':m==='network'?'The speech check needs an internet connection (Chrome and Edge use their free online speech service). You can still hear yourself below.':m==='language-not-supported'?'This browser has no Dutch speech check. Use Chrome or Edge, or hear yourself below and compare.':m==='audio-capture'?micHelp('NotReadableError'):micHelp(m,true)};
         r.onend=function(){if(take===me){try{me.rec&&me.rec.state!=='inactive'&&me.rec.stop()}catch(e){}me.done()}};
         try{r.start()}catch(err){fb.textContent='Click again to start the microphone.';stopTake()}
