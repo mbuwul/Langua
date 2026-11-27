@@ -5,13 +5,14 @@ name: Build Android app
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: android-build
+  group: android-build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -48,7 +49,14 @@ jobs:
           ./gradlew assembleRelease --no-daemon
           cp app/build/outputs/apk/release/app-release.apk ../Langua-Dutch.apk
 
+      - name: Keep the APK with this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: Langua-Dutch-apk
+          path: Langua-Dutch.apk
+
       - name: Publish on the Releases page
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
