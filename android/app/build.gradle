@@ -9,7 +9,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Each automatic build gets a higher number so phones accept it as an update.
         versionCode(((System.getenv("VERSION_CODE") ?: "1") as int) + 1)
-        versionName "1.0." + (System.getenv("VERSION_CODE") ?: "0")
+        // "+hash" names the Android part of the app; the in-app updater compares it to know when a new APK is needed.
+        versionName "1.0." + (System.getenv("VERSION_CODE") ?: "0") + "+" + (System.getenv("NATIVE_HASH") ?: "dev")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

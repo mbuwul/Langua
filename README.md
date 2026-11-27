@@ -12,7 +12,11 @@ The same course runs as a web site and as an Android app.
    "install unknown apps": tap **Settings**, switch it on, go back and tap **Install**.
 4. Open **Langua Dutch**. The first time you tap **Say it**, allow the microphone.
 
-New versions install over the old one, and your progress is kept.
+After this first install the app **updates itself**: new lessons and fixes download in the
+background and appear the next time you open the app (or tap **Restart now**). Only when the
+Android part of the app itself changes does it show **Update the app**, which downloads the new
+APK; Android then asks you to tap **Install** (it always asks for apps from outside the Play Store).
+Your progress is kept.
 If listen buttons are silent, install the free Dutch voice: Android **Settings → System →
 Languages → Text-to-speech → Speech Services by Google → Install voice data → Nederlands**.
 The pronunciation check uses Google's free speech service on the phone and needs internet.
@@ -24,7 +28,7 @@ The pronunciation check uses Google's free speech service on the phone and needs
 | `course/src/` | The lessons, written in Markdown (A0, A1, ... one file per unit). |
 | `course/build.py` | Turns the lessons into web pages (`course/site/`). Needs Python 3 and pandoc. |
 | `course/assets/` | The course's look and behaviour (style.css, app.js) shared by site and app. |
-| `app-shell/` | Extras used only in the app: `native-speech.js` connects the course's microphone check and listen buttons to the phone's own speech services. |
+| `app-shell/` | Extras used only in the app: `native-speech.js` connects the course's microphone check and listen buttons to the phone's own speech services; `updater.js` installs new releases inside the app. |
 | `scripts/make-www.mjs` | Builds the course and copies it into `www/` for the app. |
 | `android/` | The Android project (Capacitor). |
 | `resources/` | App icon and splash screen sources. |
@@ -33,7 +37,8 @@ The pronunciation check uses Google's free speech service on the phone and needs
 
 Add or change Markdown files in `course/src/` and push to `main`.
 The **Build Android app** GitHub Action rebuilds the course and publishes a new APK on the
-Releases page within about 10 minutes. Nothing else needs to change: the app picks up every unit.
+Releases page within about 10 minutes, together with `www.zip` and `update.json`, which installed
+apps check to update themselves. Nothing else needs to change: the app picks up every unit.
 
 ## Building by hand (optional)
 
