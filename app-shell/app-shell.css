@@ -1,0 +1,5 @@
+/* Extra styles used only inside the Android app. */
+html.in-app{-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+/* Fill the strip behind the phone's status bar so text never scrolls under the clock and battery icons. */
+html.in-app body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:70}
+html.in-app .main{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}

@@ -1,0 +1,21 @@
+{
+  "name": "langua",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Langua: language courses for English speakers (Dutch first), as a web site and an Android app.",
+  "scripts": {
+    "build:course": "python3 course/build.py",
+    "build:web": "node scripts/make-www.mjs",
+    "sync": "npm run build:web && npx cap sync android",
+    "apk": "npm run sync && cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor-community/speech-recognition": "^7.0.1",
+    "@capacitor-community/text-to-speech": "^8.0.2",
+    "@capacitor/android": "^8.6.3",
+    "@capacitor/core": "^8.6.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.3"
+  }
+}
