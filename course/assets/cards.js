@@ -206,7 +206,7 @@
       var r = new SR(); r.lang = 'nl-NL'; r.interimResults = false; r.maxAlternatives = 5; r.continuous = false;
       btn.classList.add('listening'); btn.querySelector('span').textContent = 'Listening…'; out.textContent = 'Speak now.';
       r.onresult = function (e) { var a = []; for (var i = 0; i < e.results[0].length; i++)a.push(e.results[0][i].transcript); srState = a; out.textContent = 'Heard: “' + a[0] + '”. Now show the answer.' };
-      r.onerror = function (e) { if (e.error === 'no-match') srState = ['']; out.textContent = e.error === 'no-match' ? 'That didn\u2019t sound like the Dutch. Show the answer and listen.' : e.error === 'no-speech' ? 'I heard nothing. Try again.' : e.error === 'network' ? 'The speech check needs internet.' : /not-allowed/.test(e.error) ? 'Allow the microphone to use the speech check.' : 'Microphone problem (' + e.error + ').' };
+      r.onerror = function (e) { if (e.error === 'no-match') srState = ['']; out.textContent = e.error === 'language-not-supported' ? 'Your phone can\u2019t recognise Dutch yet. In the Google app: Settings, Voice, Languages, add Nederlands.' : e.error === 'no-match' ? 'That didn\u2019t sound like the Dutch. Show the answer and listen.' : e.error === 'no-speech' ? 'I heard nothing. Try again.' : e.error === 'network' ? 'The speech check needs internet.' : /not-allowed/.test(e.error) ? 'Allow the microphone to use the speech check.' : 'Microphone problem (' + e.error + ').' };
       r.onend = function () { btn.classList.remove('listening'); btn.querySelector('span').textContent = 'Say it again' };
       try { r.start() } catch (e) { out.textContent = 'Could not start the microphone.' }
     }
