@@ -35,19 +35,22 @@
     });
   }
 
-  function check() {
-    /* at most every 10 minutes, across page changes */
-    if (busy || Date.now() - (+store('nl-upd-check') || 0) < 10 * 60000) return;
+  /* Checks the newest release. force: ignore the "checked recently" and "Later" pauses (the dashboard button).
+     Resolves with a short status line for the dashboard. */
+  function check(force) {
+    if (busy) return Promise.resolve('Already checking…');
+    if (!force && Date.now() - (+store('nl-upd-check') || 0) < 60000) return Promise.resolve('');
     busy = true; store('nl-upd-check', String(Date.now()));
-    Promise.all([U.current(), getJSON(FEED + '?t=' + Date.now())]).then(function (r) {
+    return Promise.all([U.current(), getJSON(FEED + '?t=' + Date.now())]).then(function (r) {
       var cur = r[0] || {}, info = r[1] || {};
-      if (!info.build || info.build <= BUILD) return;
+      if (!info.build) return 'Could not read the update information.';
+      if (info.build <= BUILD) return 'You have the newest version.';
       var mine = nativeHash(cur.native);
-      if (info.nativeHash && mine && info.nativeHash !== mine) {
-        /* A new APK is needed. Ask at most once a day. */
-        if (Date.now() - (+store('nl-upd-later') || 0) < 86400000) return;
-        bar('A new version of the app is ready.', 'Update the app', function () { window.location.href = info.apk }, true);
-        return;
+      if (info.nativeHash && info.nativeHash !== mine) {
+        /* A new APK is needed. After "Later", ask again an hour later (or at once from the button). */
+        if (force || Date.now() - (+store('nl-upd-later') || 0) > 3600000)
+          bar('A new version of the app (' + info.version + ') is ready.', 'Update the app', function () { window.location.href = info.apk }, true);
+        return 'Version ' + info.version + ' is ready: tap Update the app.';
       }
       /* Already downloaded? Then just make sure it is set for next launch. */
       return U.list().then(function (l) {
@@ -55,13 +58,28 @@
         return got || U.download({ url: info.zip, version: info.version });
       }).then(function (bundle) {
         return U.next({ id: bundle.id }).then(function () {
-          bar('New lessons and improvements are ready.', 'Restart now', function (b) { b.remove(); U.set({ id: bundle.id }) }, true);
+          bar('New lessons and improvements (' + info.version + ') are ready.', 'Restart now', function (b) { b.remove(); U.set({ id: bundle.id }) }, true);
+          return 'Version ' + info.version + ' downloaded: tap Restart now.';
         });
       });
-    }).catch(function (e) { console.log('[updater] ' + (e && e.message || e)) })
-      .then(function () { busy = false });
+    }).catch(function (e) { console.log('[updater] ' + (e && e.message || e)); return 'Could not check for updates (' + (e && e.message || e) + '). Are you online?' })
+      .then(function (msg) { busy = false; return msg });
   }
 
-  setTimeout(check, 2500);
-  try { A.addListener('resume', function () { setTimeout(check, 1000) }) } catch (e) { }
+  setTimeout(function () { check(false) }, 2000);
+  try { A.addListener('resume', function () { setTimeout(function () { check(false) }, 800) }) } catch (e) { }
+
+  /* Dashboard: show the app version and a "Check for updates" button. */
+  function dash() {
+    if (document.body.getAttribute('data-code') !== 'home') return;
+    var main = document.querySelector('.main'); if (!main) return;
+    var p = document.createElement('p'); p.className = 'upd-ver';
+    U.current().then(function (c) {
+      p.innerHTML = '<span>Langua Dutch ' + (window.LANGUA_VERSION || '') + ' <small>(app ' + String(c.native || '').split('+')[0] + ')</small></span> <button type="button" class="upd-check">Check for updates</button><span class="upd-msg" aria-live="polite"></span>';
+      main.appendChild(p);
+      var btn = p.querySelector('.upd-check'), msg = p.querySelector('.upd-msg');
+      btn.onclick = function () { msg.textContent = 'Checking…'; check(true).then(function (m) { msg.textContent = m }) };
+    }).catch(function () {});
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dash); else dash();
 })();
