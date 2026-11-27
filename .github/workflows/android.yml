@@ -1,0 +1,66 @@
+name: Build Android app
+
+# Runs every time the course or the app changes on main (or when started by hand),
+# and publishes the newest installable APK on the repository's Releases page.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install pandoc (turns the lessons into web pages)
+        run: sudo apt-get update && sudo apt-get install -y pandoc
+
+      - name: Install app tools
+        run: npm ci
+
+      - name: Build the course and copy it into the app
+        run: npm run sync
+
+      - name: Build the APK
+        working-directory: android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk ../Langua-Dutch.apk
+
+      - name: Keep the APK with this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: Langua-Dutch-apk
+          path: Langua-Dutch.apk
+
+      - name: Publish on the Releases page
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v1.0.${{ github.run_number }}"
+          gh release create "$TAG" Langua-Dutch.apk --latest \
+            --title "Langua Dutch 1.0.${{ github.run_number }}" \
+            --notes "Install on Android: open this page on your phone, tap Langua-Dutch.apk, then Install. Built from ${GITHUB_SHA::7}."
