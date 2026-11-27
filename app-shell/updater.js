@@ -1,7 +1,8 @@
 /* Langua Android app: in-app updates (loaded only in the app).
    Every GitHub release publishes update.json, www.zip (the course pages) and the APK.
-   - New lessons and fixes (www.zip) download quietly in the background and are used the next time the
-     app opens, or straight away if the learner taps "Restart now". No download from the browser needed.
+   - New lessons and fixes (www.zip) download by themselves each time the app is opened or brought back.
+     Right after opening, the app switches to the new version at once (a short "Updating…" note);
+     otherwise it switches the next time the learner leaves the app. No download from the browser needed.
    - When the app's own Android part changed (new plugins, permissions), the web update could need it, so
      instead the learner sees "Update the app", which downloads and installs the new APK (Android always
      asks the learner to confirm an install from outside the Play Store).
@@ -11,7 +12,10 @@
   if (!C || !C.isNativePlatform || !C.isNativePlatform()) return;
   var U = C.registerPlugin('CapacitorUpdater'), H = C.registerPlugin('CapacitorHttp'), A = C.registerPlugin('App');
   var FEED = 'https://github.com/mbuwul/Langua/releases/latest/download/update.json';
-  var BUILD = window.LANGUA_BUILD || 0, busy = false;
+  var BUILD = window.LANGUA_BUILD || 0, busy = false, openedAt = Date.now();
+  /* Just opened (or brought back) and not typing: safe to switch to the new version straight away. */
+  function quietMoment() { var a = document.activeElement; return Date.now() - openedAt < 25000 && !(a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) }
+  function toast(t) { var d = document.createElement('div'); d.className = 'upd-bar upd-toast'; d.setAttribute('role', 'status'); d.innerHTML = '<span class="upd-t"></span>'; d.querySelector('.upd-t').textContent = t; document.body.appendChild(d) }
 
   U.notifyAppReady().catch(function () {}); /* this bundle works: don't roll it back */
 
@@ -58,8 +62,15 @@
         return got || U.download({ url: info.zip, version: info.version });
       }).then(function (bundle) {
         return U.next({ id: bundle.id }).then(function () {
-          bar('New lessons and improvements (' + info.version + ') are ready.', 'Restart now', function (b) { b.remove(); U.set({ id: bundle.id }) }, true);
-          return 'Version ' + info.version + ' downloaded: tap Restart now.';
+          /* Install it at once if the app was just opened or the learner asked; otherwise it installs by
+             itself the moment the app goes to the background (the updater plugin does that). */
+          if (force || quietMoment()) {
+            toast('Updating to version ' + info.version + '…');
+            setTimeout(function () { U.set({ id: bundle.id }) }, 900);
+            return 'Installing version ' + info.version + '…';
+          }
+          bar('Version ' + info.version + ' is ready. It installs by itself when you leave the app.', 'Update now', function (b) { b.remove(); U.set({ id: bundle.id }) }, true);
+          return 'Version ' + info.version + ' downloaded.';
         });
       });
     }).catch(function (e) { console.log('[updater] ' + (e && e.message || e)); return 'Could not check for updates (' + (e && e.message || e) + '). Are you online?' })
@@ -67,7 +78,7 @@
   }
 
   setTimeout(function () { check(false) }, 2000);
-  try { A.addListener('resume', function () { setTimeout(function () { check(false) }, 800) }) } catch (e) { }
+  try { A.addListener('resume', function () { openedAt = Date.now(); setTimeout(function () { check(false) }, 800) }) } catch (e) { }
 
   /* Settings page: app version, automatic checks, and a "Check for updates" button. */
   function dash() {
